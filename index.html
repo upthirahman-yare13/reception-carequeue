@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CareQueue Manager | Live System</title>
+    <title>CareQueue Manager | Live</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    
     <style>
         :root { --blue: #1e40af; --gold: #fbbf24; --dark: #0f172a; --card: #1e293b; }
         body { background: var(--dark); color: white; font-family: sans-serif; margin: 0; padding: 20px; }
@@ -16,7 +15,7 @@
         input { width: 95%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; background: #334155; color: white; }
         .btn { background: var(--gold); color: var(--dark); padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 8px; font-size: 16px; }
         .display-box { text-align: center; border: 4px solid var(--blue); }
-        .big-text { font-size: 100px; color: var(--gold); font-weight: bold; margin: 10px 0; }
+        .big-text { font-size: 80px; color: var(--gold); font-weight: bold; margin: 10px 0; }
         .room-tag { background: var(--blue); padding: 10px 30px; border-radius: 50px; font-size: 24px; display: inline-block; }
     </style>
 </head>
@@ -43,7 +42,6 @@
     </div>
 
     <script>
-        // Isku xirka Database-ka
         const firebaseConfig = {
             databaseURL: "https://carequeue-manager-default-rtdb.firebaseio.com/"
         };
@@ -73,7 +71,14 @@
                 document.getElementById('displayName').innerText = data.name;
                 document.getElementById('displayRoom').innerText = data.room;
 
-                const speech = new SpeechSynthesisUtterance(`Bukaan lambar ${data.num}, fadlan gal qolka ${data.room}`);
+                // Codka Faseexka ah
+                const messageText = `Bukaan ${data.name}, lambar ${data.num}, fadlan gal qolka ${data.room}`;
+                const speech = new SpeechSynthesisUtterance(messageText);
+                
+                speech.lang = 'so-SO'; 
+                speech.rate = 0.9;     
+                speech.pitch = 1;      
+
                 window.speechSynthesis.speak(speech);
             }
         });
