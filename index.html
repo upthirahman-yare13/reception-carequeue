@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CareQueue Manager | Pro System</title>
+    <title>CareQueue Manager | Live System</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     
     <style>
         :root { --blue: #1e40af; --gold: #fbbf24; --dark: #0f172a; --card: #1e293b; }
-        body { background: var(--dark); color: white; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 20px; }
+        body { background: var(--dark); color: white; font-family: sans-serif; margin: 0; padding: 20px; }
         .wrapper { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; max-width: 1000px; margin: auto; }
         .box { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid #334155; }
         h1 { text-align: center; color: var(--gold); }
         input { width: 95%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; background: #334155; color: white; }
         .btn { background: var(--gold); color: var(--dark); padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 8px; font-size: 16px; }
         .display-box { text-align: center; border: 4px solid var(--blue); }
-        .big-text { font-size: 120px; color: var(--gold); font-weight: 900; margin: 10px 0; }
+        .big-text { font-size: 100px; color: var(--gold); font-weight: bold; margin: 10px 0; }
         .room-tag { background: var(--blue); padding: 10px 30px; border-radius: 50px; font-size: 24px; display: inline-block; }
     </style>
 </head>
@@ -34,22 +34,22 @@
         </div>
 
         <div class="box display-box">
-            <div style="color: #94a3b8; font-size: 20px;">BUKAANKA HADDA</div>
+            <div style="color: #94a3b8;">BUKAANKA HADDA</div>
             <div class="big-text" id="displayNum">---</div>
-            <div id="displayName" style="font-size: 30px; margin-bottom: 20px;">Fadlan sug...</div>
+            <div id="displayName" style="font-size: 30px;">Fadlan sug...</div>
+            <br><br>
             <div class="room-tag">QOLKA: <span id="displayRoom">0</span></div>
         </div>
     </div>
 
     <script>
-        // Isku xirka Database-kaaga gaarka ah
+        // Isku xirka Database-ka
         const firebaseConfig = {
-          databaseURL: "https://carequeue-manager-default-rtdb.firebaseio.com/"  
+            databaseURL: "https://carequeue-manager-default-rtdb.firebaseio.com/"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // 1. Shaqada Reception-ka (U diridda Database-ka)
         function updateQueue() {
             const name = document.getElementById('pName').value;
             const num = document.getElementById('pNum').value;
@@ -62,11 +62,10 @@
                     room: room
                 });
             } else {
-                alert("Fadlan buuxi xogta!");
+                alert("Fadlan buuxi dhammaan xogta!");
             }
         }
 
-        // 2. Shaqada TV-ga (Maqalka iyo Muujinta Xogta)
         db.ref('live_queue').on('value', (snapshot) => {
             const data = snapshot.val();
             if(data) {
@@ -74,7 +73,6 @@
                 document.getElementById('displayName').innerText = data.name;
                 document.getElementById('displayRoom').innerText = data.room;
 
-                // Codka yeeraya (Browser Voice)
                 const speech = new SpeechSynthesisUtterance(`Bukaan lambar ${data.num}, fadlan gal qolka ${data.room}`);
                 window.speechSynthesis.speak(speech);
             }
