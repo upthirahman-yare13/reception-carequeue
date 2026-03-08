@@ -3,82 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CareQueue Ultra Pro | Reception Dashboard</title>
+    <title>CareQueue Enterprise | Voice Pro</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         :root { --blue: #2563eb; --gold: #fbbf24; --dark: #0f172a; --card: #1e293b; --red: #ef4444; --green: #22c55e; }
-        body { background: var(--dark); color: white; font-family: 'Inter', sans-serif; margin: 0; padding: 20px; }
-        .container { max-width: 1300px; margin: auto; }
-        .main-grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
-        .card { background: var(--card); padding: 25px; border-radius: 16px; border: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 1400px; margin: auto; }
+        .main-grid { display: grid; grid-template-columns: 380px 1fr; gap: 25px; }
+        .card { background: var(--card); padding: 25px; border-radius: 16px; border: 1px solid #334155; }
         
-        /* Form Styling */
-        h3 { margin-top: 0; color: var(--gold); border-bottom: 2px solid #334155; padding-bottom: 10px; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
-        .btn-main { background: var(--gold); color: var(--dark); padding: 15px; width: 100%; border: none; font-weight: 800; cursor: pointer; border-radius: 8px; text-transform: uppercase; }
+        /* Registration Form */
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
+        .btn-main { background: var(--gold); color: var(--dark); padding: 15px; width: 100%; border: none; font-weight: 800; cursor: pointer; border-radius: 8px; margin-top: 10px; }
         
-        /* Display Styling */
-        .display-card { text-align: center; border: 4px solid var(--blue); position: relative; }
-        .big-number { font-size: 130px; line-height: 1; color: var(--gold); font-weight: 900; margin: 20px 0; }
-        .patient-name { font-size: 35px; color: #f8fafc; margin-bottom: 15px; font-weight: 600; }
-        .room-badge { background: var(--blue); padding: 10px 40px; border-radius: 100px; font-size: 24px; font-weight: bold; }
+        /* TV Display Mode */
+        .display-card { text-align: center; border: 5px solid var(--blue); min-height: 480px; display: flex; flex-direction: column; justify-content: center; position: relative; }
+        .big-number { font-size: 150px; color: var(--gold); font-weight: 900; margin: 10px 0; line-height: 1; }
+        .patient-name { font-size: 45px; font-weight: 600; margin-bottom: 10px; }
+        .room-badge { background: var(--blue); padding: 15px 60px; border-radius: 100px; font-size: 30px; font-weight: bold; display: inline-block; }
         
-        /* Admin Section */
-        .admin-controls { margin-top: 30px; }
-        .search-box { width: 300px; margin-bottom: 15px; }
-        table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #334155; }
-        th { background: #334155; color: var(--gold); font-size: 14px; text-transform: uppercase; }
-        .re-call-btn { background: var(--green); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; margin-right: 5px; }
-        .del-btn { background: var(--red); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+        /* Full Screen TV Mode */
+        .tv-only .sidebar, .tv-only .admin-controls, .tv-only h1, .tv-only .top-nav { display: none; }
+        .tv-only .main-grid { grid-template-columns: 1fr; }
+        .tv-only .display-card { height: 95vh; border: none; background: #0f172a; }
+
+        /* Admin Table */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: var(--card); border-radius: 12px; overflow: hidden; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #334155; font-size: 14px; }
+        th { background: #334155; color: var(--gold); }
+        .action-btn { padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer; color: white; font-weight: bold; margin-right: 5px; }
+        
+        .repeat-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: var(--gold); padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-top: 20px; font-weight: bold; }
+        .repeat-btn:hover { background: var(--gold); color: var(--dark); }
     </style>
 </head>
-<body>
+<body id="mainBody">
 
 <div class="container">
-    <h1 style="text-align:center; color: var(--gold); font-size: 35px; margin-bottom: 30px;">CAREQUEUE ULTRA PRO v3.0</h1>
+    <div class="top-nav" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 style="color: var(--gold); margin: 0;">CAREQUEUE ENTERPRISE</h1>
+        <button onclick="toggleTVMode()" style="background: var(--blue); color:white; border:none; padding:12px 24px; border-radius:8px; cursor:pointer; font-weight: bold;">
+            🖥️ TV MODE (FULL SCREEN)
+        </button>
+    </div>
 
     <div class="main-grid">
-        <div class="card">
-            <h3>NEW REGISTRATION</h3>
+        <div class="card sidebar">
+            <h3 style="color: var(--gold); margin-top:0; border-bottom: 1px solid #334155; padding-bottom: 10px;">RECEPTION</h3>
             <input type="text" id="pName" placeholder="Magaca Bukaanka">
-            <input type="text" id="pNum" placeholder="Lambar Tikidh (Tusaale: 101)">
+            <input type="text" id="pNum" placeholder="Lambar Tikidh">
             <input type="number" id="pRoom" placeholder="Qolka">
+            <input type="tel" id="pPhone" placeholder="Mobile-ka Bukaanka">
+            <input type="tel" id="pGuardian" placeholder="Mobile-ka Mas'uulka">
             <select id="pPriority">
                 <option value="Caadi">Priority: Caadi</option>
-                <option value="Deg-deg">Priority: Deg-deg (Emergency)</option>
+                <option value="Deg-deg">Priority: Deg-deg</option>
             </select>
             <button class="btn-main" onclick="updateQueue()">U DIR TV-GA & KEYDI</button>
-            <p style="font-size: 12px; color: #94a3b8; margin-top: 15px;">* Xogtu waxay si toos ah ugu dhacaysaa Database-ka.</p>
         </div>
 
         <div class="card display-card">
-            <div style="color: #94a3b8; letter-spacing: 2px; font-weight: 700;">LIVE CALLING</div>
+            <div style="color: #94a3b8; font-size: 20px; font-weight: 700; letter-spacing: 2px;">BUKAANKA HADDA LA FILAYO</div>
             <div class="big-number" id="displayNum">---</div>
             <div class="patient-name" id="displayName">Sugitaanka...</div>
-            <div class="room-badge">QOLKA: <span id="displayRoom">0</span></div>
-            <br><br>
-            <button onclick="announceCurrent()" style="background:none; color:var(--blue); border:1px solid var(--blue); padding:8px 15px; border-radius:5px; cursor:pointer;">
-                🔊 KU CELI WICITAANKA
-            </button>
+            <div><div class="room-badge">QOLKA: <span id="displayRoom">0</span></div></div>
+            
+            <center>
+                <button class="repeat-btn" onclick="announceCurrent()">🔊 WICITAANKA KU CELI</button>
+            </center>
         </div>
     </div>
 
-    <div class="admin-controls">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3>PATIENT LOGS (DIIWAANKA)</h3>
-            <input type="text" id="searchBar" class="search-box" placeholder="Raadi Magaca ama Lambarka..." onkeyup="filterTable()">
-        </div>
+    <div class="admin-controls" style="margin-top: 40px;">
+        <h3 style="color: var(--gold);">DIIWAANKA GUUD (ADMIN)</h3>
         <table>
             <thead>
                 <tr>
                     <th>Tikidh</th>
                     <th>Magaca Bukaanka</th>
+                    <th>Mobile</th>
+                    <th>Mas'uulka</th>
                     <th>Qolka</th>
-                    <th>Heerka</th>
                     <th>Waqtiga</th>
-                    <th>Settings</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody id="historyBody"></tbody>
@@ -87,39 +95,57 @@
 </div>
 
 <script>
+    // Configuration
     const firebaseConfig = { databaseURL: "https://carequeue-manager-default-rtdb.firebaseio.com/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
     let currentPatient = null;
 
+    // Toggle Screen Mode
+    function toggleTVMode() {
+        document.getElementById('mainBody').classList.toggle('tv-only');
+    }
+
+    // Add to Database
     function updateQueue() {
         const name = document.getElementById('pName').value;
         const num = document.getElementById('pNum').value;
         const room = document.getElementById('pRoom').value;
+        const phone = document.getElementById('pPhone').value;
+        const guardian = document.getElementById('pGuardian').value;
         const prio = document.getElementById('pPriority').value;
 
         if(name && num && room) {
             const time = new Date().toLocaleTimeString();
-            db.ref('live_queue').set({ name, num, room, prio });
-            db.ref('patient_history').push({ name, num, room, prio, time });
-
+            // TV-ga cusboonaysii
+            db.ref('live_queue').set({ name, num, room });
+            // History ku dar
+            db.ref('patient_history').push({ name, num, room, phone, guardian, prio, time });
+            
+            // Nadiifi form-ka
             document.getElementById('pName').value = "";
             document.getElementById('pNum').value = "";
+            document.getElementById('pPhone').value = "";
+            document.getElementById('pGuardian').value = "";
+        } else {
+            alert("Fadlan buuxi Magaca, Tikidka iyo Qolka!");
         }
     }
 
-    // Codka oo la degeeyay (Faseex)
+    // Voice Engine (Faseex & Repeatable)
     function announceCurrent() {
-        if(currentPatient) {
-            const msg = `Bukaan ${currentPatient.name}, lambar ${currentPatient.num}, fadlan gal qolka ${currentPatient.room}`;
+        if(currentPatient && currentPatient.name !== "Sugitaanka...") {
+            window.speechSynthesis.cancel(); // Jooji hadalkii hore hadduu socdo
+            const msg = `Bukaan ${currentPatient.name}, lambar ${currentPatient.num}, fadlan u gudub qolka ${currentPatient.room}`;
             const speech = new SpeechSynthesisUtterance(msg);
-            speech.lang = 'so-SO';
-            speech.rate = 0.8; // Aad u faseex ah
+            speech.lang = 'so-SO'; 
+            speech.rate = 0.8; // Xawaare degan oo faseex ah
+            speech.pitch = 1;
             window.speechSynthesis.speak(speech);
         }
     }
 
+    // Listen to Live Updates
     db.ref('live_queue').on('value', (snapshot) => {
         const data = snapshot.val();
         if(data) {
@@ -127,10 +153,11 @@
             document.getElementById('displayNum').innerText = data.num;
             document.getElementById('displayName').innerText = data.name;
             document.getElementById('displayRoom').innerText = data.room;
-            announceCurrent();
+            announceCurrent(); // Iskiis ha ugu dhawaaqo marka xogta la diro
         }
     });
 
+    // Load History
     db.ref('patient_history').on('value', (snapshot) => {
         const tbody = document.getElementById('historyBody');
         tbody.innerHTML = "";
@@ -139,12 +166,13 @@
             const row = `<tr>
                 <td><b>#${item.num}</b></td>
                 <td>${item.name}</td>
+                <td>${item.phone || '-'}</td>
+                <td>${item.guardian || '-'}</td>
                 <td>Qolka ${item.room}</td>
-                <td><span style="color:${item.prio === 'Deg-deg' ? '#ef4444' : '#22c55e'}">${item.prio}</span></td>
                 <td>${item.time}</td>
                 <td>
-                    <button class="re-call-btn" onclick="callAgain('${item.name}', '${item.num}', '${item.room}')">Wicid</button>
-                    <button class="del-btn" onclick="deleteItem('${child.key}')">Tirtir</button>
+                    <button style="background:var(--green)" class="action-btn" onclick="callAgain('${item.name}','${item.num}','${item.room}')">Wicid</button>
+                    <button style="background:var(--red)" class="action-btn" onclick="deleteItem('${child.key}')">Tirtir</button>
                 </td>
             </tr>`;
             tbody.insertAdjacentHTML('afterbegin', row);
@@ -156,14 +184,8 @@
     }
 
     function deleteItem(id) {
-        if(confirm("Ma hubtaa?")) db.ref('patient_history').child(id).remove();
-    }
-
-    function filterTable() {
-        let input = document.getElementById("searchBar").value.toLowerCase();
-        let rows = document.getElementById("historyBody").getElementsByTagName("tr");
-        for (let row of rows) {
-            row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+        if(confirm("Ma hubtaa inaad tirtirto xogtan?")) {
+            db.ref('patient_history').child(id).remove();
         }
     }
 </script>
