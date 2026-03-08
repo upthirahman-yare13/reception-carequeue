@@ -6,46 +6,70 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root { --blue: #2563eb; --gold: #fbbf24; --dark: #0f172a; --card: #1e293b; --red: #ef4444; }
-        body { background: var(--dark); color: white; font-family: sans-serif; padding: 20px; }
-        .grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
-        .card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #334155; }
-        input, select { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; }
-        .btn { background: var(--gold); color: var(--dark); padding: 12px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; font-size: 14px; }
-        th { color: var(--gold); }
-        .search-box { background: #1e293b; border: 1px solid var(--blue); padding: 10px; width: 300px; color: white; margin-bottom: 10px; }
+        :root { --blue: #2563eb; --gold: #fbbf24; --dark: #0f172a; --card: #1e293b; --red: #ef4444; --green: #10b981; }
+        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; }
+        .card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        h2 { color: var(--gold); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
+        h3 { border-bottom: 1px solid var(--blue); padding-bottom: 10px; margin-bottom: 15px; }
+        label { font-size: 12px; color: #94a3b8; margin-top: 5px; display: block; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
+        .btn { background: var(--blue); color: white; padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 10px; transition: 0.3s; }
+        .btn:hover { background: #1d4ed8; transform: translateY(-2px); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e293b; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #334155; font-size: 14px; }
+        th { background: #1e293b; color: var(--gold); }
+        .search-box { background: #0f172a; border: 2px solid var(--blue); padding: 12px; width: 100%; border-radius: 8px; color: white; margin-bottom: 20px; outline: none; }
     </style>
 </head>
 <body>
-    <h2>RECEPTION CONTROL PANEL (PRIVATE)</h2>
+    <h2>CAREQUEUE RECEPTION CONTROL</h2>
     <div class="grid">
         <div class="card">
-            <h3>Diiwaangeli</h3>
+            <h3>Diiwaangelinta Cusub</h3>
+            
+            <label>Macluumaadka Bukaanka</label>
             <input type="text" id="pName" placeholder="Magaca Bukaanka">
-            <input type="text" id="pNum" placeholder="Lambar Tikidh">
-            <input type="number" id="pRoom" placeholder="Qolka">
+            <input type="text" id="pNum" placeholder="Lambar Tikidh (Tusaale: 001)">
             <input type="tel" id="pPhone" placeholder="Mobile Bukaanka">
-            <input type="tel" id="pGuardian" placeholder="Mobile Mas'uulka">
+            
+            <label>Macluumaadka Dhakhtarka</label>
+            <input type="text" id="dName" placeholder="Magaca Dhakhtarka">
+            <input type="number" id="pRoom" placeholder="Qolka Dhakhtarka (Room #)">
+            
+            <label>Ahmiyadda & Xiriirka</label>
             <select id="pPriority">
                 <option value="Caadi">Caadi</option>
                 <option value="Deg-deg">Deg-deg</option>
             </select>
+            <input type="tel" id="pGuardian" placeholder="Mobile-ka Ehelka (Hadii uu jiro)">
+            
             <button class="btn" onclick="sendToTV()">U DIR TV-GA & KEYDI</button>
         </div>
+
         <div class="card">
-            <input type="text" id="search" class="search-box" onkeyup="searchTable()" placeholder="Raadi Magac ama Mobile...">
-            <table>
-                <thead>
-                    <tr><th>#</th><th>Magaca</th><th>Mobile</th><th>Waqtiga</th><th>Action</th></tr>
-                </thead>
-                <tbody id="historyBody"></tbody>
-            </table>
+            <h3>Bukaanadii Hore & Baaritaan</h3>
+            <input type="text" id="search" class="search-box" onkeyup="searchTable()" placeholder="Raadi Magac, Mobile, ama Dhakhtar...">
+            <div style="max-height: 600px; overflow-y: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tikidh</th>
+                            <th>Bukaanka</th>
+                            <th>Dhakhtarka</th>
+                            <th>Qolka</th>
+                            <th>Waqtiga</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
+        // Isku xirka Firebase
         const firebaseConfig = { databaseURL: "https://carequeue-manager-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -54,32 +78,56 @@
             const name = document.getElementById('pName').value;
             const num = document.getElementById('pNum').value;
             const room = document.getElementById('pRoom').value;
+            const docName = document.getElementById('dName').value; // Magaca Dhakhtarka
             const phone = document.getElementById('pPhone').value;
             const guardian = document.getElementById('pGuardian').value;
             const prio = document.getElementById('pPriority').value;
 
-            if(name && num && room) {
-                const time = new Date().toLocaleTimeString();
-                db.ref('live_queue').set({ name, num, room });
-                db.ref('patient_history').push({ name, num, room, phone, guardian, prio, time });
+            if(name && num && room && docName) {
+                const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                // 1. U dir TV-ga (live_queue) - Waxaa la arki doonaa Bukaanka iyo Dhakhtarka
+                db.ref('live_queue').set({ 
+                    name: name, 
+                    num: num, 
+                    room: room,
+                    doctor: docName 
+                });
+
+                // 2. Ku keydi Taariikhda (patient_history)
+                db.ref('patient_history').push({ 
+                    name, num, room, doctor: docName, phone, guardian, prio, time 
+                });
+
+                // Nadiifi meelaha wax laga qoro (Cidda dhakhtarka laguma daro si aan mar walba loo qorin)
                 document.getElementById('pName').value = "";
                 document.getElementById('pNum').value = "";
+                document.getElementById('pPhone').value = "";
+                alert("Xogta waa la diray!");
+            } else {
+                alert("Fadlan buuxi Magaca Bukaanka, Tikidhka, Dhakhtarka iyo Qolka.");
             }
         }
 
+        // Soo akhrinta History-ga si toos ah
         db.ref('patient_history').on('value', (snapshot) => {
             const tbody = document.getElementById('historyBody');
             tbody.innerHTML = "";
             snapshot.forEach((child) => {
                 const item = child.val();
                 tbody.insertAdjacentHTML('afterbegin', `<tr>
-                    <td>${item.num}</td><td>${item.name}</td><td>${item.phone}</td><td>${item.time}</td>
-                    <td><button style="background:var(--red); color:white; border:none; padding:5px; cursor:pointer;" onclick="deleteItem('${child.key}')">Tirtir</button></td>
+                    <td><b>${item.num}</b></td>
+                    <td>${item.name}</td>
+                    <td>Dr. ${item.doctor}</td>
+                    <td>Qolka ${item.room}</td>
+                    <td style="color:var(--gold)">${item.time}</td>
+                    <td><button style="background:var(--red); color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;" onclick="deleteItem('${child.key}')">Tirtir</button></td>
                 </tr>`);
             });
         });
 
-        function deleteItem(id) { if(confirm("Ma tirtirtaa?")) db.ref('patient_history').child(id).remove(); }
+        function deleteItem(id) { if(confirm("Ma hubtaa inaad tirtirto bukaankan?")) db.ref('patient_history').child(id).remove(); }
+        
         function searchTable() {
             let val = document.getElementById('search').value.toLowerCase();
             let rows = document.getElementById('historyBody').getElementsByTagName('tr');
