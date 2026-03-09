@@ -1,173 +1,345 @@
  <!DOCTYPE html>
-<html lang="so">
-<head>
-    <meta charset="UTF-8">
-    <title>CareQueue | Reception Admin</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
-    <style>
-        :root { --blue: #2563eb; --gold: #fbbf24; --dark: #0f172a; --card: #1e293b; --red: #ef4444; --green: #10b981; }
-        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
-        
-        /* Login Style */
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .login-box { background: var(--card); padding: 40px; border-radius: 12px; width: 350px; text-align: center; border: 1px solid var(--blue); }
-        
-        /* Main App Style */
-        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; display: none; } 
-        .card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        h2 { color: var(--gold); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
-        h3 { border-bottom: 1px solid var(--blue); padding-bottom: 10px; margin-bottom: 15px; }
-        label { font-size: 12px; color: #94a3b8; margin-top: 5px; display: block; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
-        .btn { background: var(--blue); color: white; padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 10px; transition: 0.3s; }
-        .btn:hover { background: #1d4ed8; transform: translateY(-2px); }
-        .logout-btn { background: var(--red); padding: 8px 15px; float: right; cursor: pointer; border: none; color: white; border-radius: 5px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e293b; border-radius: 8px; overflow: hidden; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #334155; font-size: 14px; }
-        th { background: #1e293b; color: var(--gold); }
-    </style>
+<html lang="so">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>CareQueue | Reception Admin</title>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+
+
+    <style>
+
+        :root { --blue: #2563eb; --gold: #fbbf24; --dark: #0f172a; --card: #1e293b; --red: #ef4444; --green: #10b981; }
+
+        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+
+        
+
+        /* Login Style */
+
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+
+        .login-box { background: var(--card); padding: 40px; border-radius: 12px; width: 350px; text-align: center; border: 1px solid var(--blue); }
+
+        
+
+        /* Main App Style */
+
+        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; display: none; } 
+
+        .card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+
+        h2 { color: var(--gold); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
+
+        h3 { border-bottom: 1px solid var(--blue); padding-bottom: 10px; margin-bottom: 15px; }
+
+        label { font-size: 12px; color: #94a3b8; margin-top: 5px; display: block; }
+
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
+
+        .btn { background: var(--blue); color: white; padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 10px; transition: 0.3s; }
+
+        .btn:hover { background: #1d4ed8; transform: translateY(-2px); }
+
+        .logout-btn { background: var(--red); padding: 8px 15px; float: right; cursor: pointer; border: none; color: white; border-radius: 5px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e293b; border-radius: 8px; overflow: hidden; }
+
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #334155; font-size: 14px; }
+
+        th { background: #1e293b; color: var(--gold); }
+
+    </style>
+
 </head>
+
 <body>
 
-    <div id="login-overlay">
-        <div class="login-box">
-            <h2>CAREQUEUE LOGIN</h2>
-            <input type="email" id="loginEmail" placeholder="Email-ka Isbitaalka">
-            <input type="password" id="loginPass" placeholder="Password-ka">
-            <button class="btn" onclick="handleLogin()">GALO NIDAAMKA</button>
-        </div>
-    </div>
 
-    <div id="admin-content">
-        <button class="logout-btn" onclick="firebase.auth().signOut()">Logout</button>
-        <h2>CAREQUEUE RECEPTION CONTROL</h2>
-        <div class="grid" id="mainGrid">
-            <div class="card">
-                <h3>Diiwaangelinta Cusub</h3>
-                <label>Macluumaadka Bukaanka</label>
-                <input type="text" id="pName" placeholder="Magaca Bukaanka">
-                <input type="text" id="pNum" placeholder="Lambar Tikidh">
-                <input type="tel" id="pPhone" placeholder="Mobile Bukaanka">
-                <label>Macluumaadka Dhakhtarka</label>
-                <input type="text" id="dName" placeholder="Magaca Dhakhtarka">
-                <input type="number" id="pRoom" placeholder="Qolka Dhakhtarka">
-                <select id="pPriority">
-                    <option value="Caadi">Caadi</option>
-                    <option value="Deg-deg">Deg-deg</option>
-                </select>
-                <button class="btn" onclick="sendToTV()">U DIR TV-GA & KEYDI</button>
-            </div>
 
-            <div class="card">
-                <h3>Bukaanadii Hore</h3>
-                <input type="text" id="search" class="search-box" onkeyup="searchTable()" placeholder="Raadi...">
-                <div style="max-height: 500px; overflow-y: auto;">
-                    <table>
-                        <thead>
-                            <tr><th>Tikidh</th><th>Bukaanka</th><th>Dhakhtarka</th><th>Waqtiga</th><th>Action</th></tr>
-                        </thead>
-                        <tbody id="historyBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div id="login-overlay">
 
-    <script>
-        // 1. Isku xirka Firebase (Waxaan geliyey xogtaadii saxda ahayd)
-        const firebaseConfig = { 
-            apiKey: "AIzaSyB5LuhewiHycIpkMWq-3HUW8yRlsSy4fLA", // Furahaaga saxda ah
-            authDomain: "carequeue-manager.firebaseapp.com",
-            databaseURL: "https://carequeue-manager-default-rtdb.firebaseio.com",
-            projectId: "carequeue-manager",
-            storageBucket: "carequeue-manager.appspot.com",
-            messagingSenderId: "328741466836",
-            appId: "1:328741466836:web:d073eb2a501944e6fa8141"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const auth = firebase.auth();
+        <div class="login-box">
 
-        // 2. Maareynta Login-ka (Waxaan ku daray .trim() si uusan space khalad u keenin)
-        function handleLogin() {
-            const email = document.getElementById('loginEmail').value.trim();
-            const pass = document.getElementById('loginPass').value.trim();
-            
-            if(!email || !pass) {
-                alert("Fadlan buuxi email-ka iyo password-ka");
-                return;
-            }
+            <h2>CAREQUEUE LOGIN</h2>
 
-            auth.signInWithEmailAndPassword(email, pass)
-                .catch(err => alert("Khalad: " + err.message));
-        }
+            <input type="email" id="loginEmail" placeholder="Email-ka Isbitaalka">
 
-        // 3. Hubi haddii qofku soo galay
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                document.getElementById('login-overlay').style.display = 'none';
-                document.getElementById('mainGrid').style.display = 'grid';
-                loadHistory(); 
-            } else {
-                document.getElementById('login-overlay').style.display = 'flex';
-                document.getElementById('mainGrid').style.display = 'none';
-            }
-        });
+            <input type="password" id="loginPass" placeholder="Password-ka">
 
-        // 4. Shaqada Dirista Xogta
-        function sendToTV() {
-            const name = document.getElementById('pName').value;
-            const num = document.getElementById('pNum').value;
-            const room = document.getElementById('pRoom').value;
-            const docName = document.getElementById('dName').value;
-            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            <button class="btn" onclick="handleLogin()">GALO NIDAAMKA</button>
 
-            if(name && num && room && docName) {
-                db.ref('live_queue').set({ name, num, room, doctor: docName });
-                db.ref('patient_history').push({ name, num, room, doctor: docName, time });
-                
-                // Nadiifi meelaha wax laga qoro
-                document.getElementById('pName').value = "";
-                document.getElementById('pNum').value = "";
-                document.getElementById('pPhone').value = "";
-                alert("Waa la diray!");
-            } else {
-                alert("Fadlan buuxi dhammaan meelaha bannaan!");
-            }
-        }
+        </div>
 
-        // 5. Soo Akhrinta History-ga
-        function loadHistory() {
-            db.ref('patient_history').on('value', (snapshot) => {
-                const tbody = document.getElementById('historyBody');
-                tbody.innerHTML = "";
-                snapshot.forEach((child) => {
-                    const item = child.val();
-                    tbody.insertAdjacentHTML('afterbegin', `<tr>
-                        <td><b>${item.num}</b></td>
-                        <td>${item.name}</td>
-                        <td>Dr. ${item.doctor}</td>
-                        <td>${item.time}</td>
-                        <td><button style="background:var(--red); color:white; border:none; padding:5px; cursor:pointer; border-radius:3px;" onclick="deleteItem('${child.key}')">Tirtir</button></td>
-                    </tr>`);
-                });
-            });
-        }
+    </div>
 
-        function deleteItem(id) { if(confirm("Ma hubtaa inaad tirtirto?")) db.ref('patient_history').child(id).remove(); }
 
-        // 6. Raadinta (Search)
-        function searchTable() {
-            let input = document.getElementById("search").value.toUpperCase();
-            let tr = document.getElementById("historyBody").getElementsByTagName("tr");
-            for (let i = 0; i < tr.length; i++) {
-                tr[i].style.display = tr[i].innerText.toUpperCase().indexOf(input) > -1 ? "" : "none";
-            }
-        }
-    </script>
+
+    <div id="admin-content">
+
+        <button class="logout-btn" onclick="firebase.auth().signOut()">Logout</button>
+
+        <h2>CAREQUEUE RECEPTION CONTROL</h2>
+
+        <div class="grid" id="mainGrid">
+
+            <div class="card">
+
+                <h3>Diiwaangelinta Cusub</h3>
+
+                <label>Macluumaadka Bukaanka</label>
+
+                <input type="text" id="pName" placeholder="Magaca Bukaanka">
+
+                <input type="text" id="pNum" placeholder="Lambar Tikidh">
+
+                <input type="tel" id="pPhone" placeholder="Mobile Bukaanka">
+
+                <label>Macluumaadka Dhakhtarka</label>
+
+                <input type="text" id="dName" placeholder="Magaca Dhakhtarka">
+
+                <input type="number" id="pRoom" placeholder="Qolka Dhakhtarka">
+
+                <select id="pPriority">
+
+                    <option value="Caadi">Caadi</option>
+
+                    <option value="Deg-deg">Deg-deg</option>
+
+                </select>
+
+                <button class="btn" onclick="sendToTV()">U DIR TV-GA & KEYDI</button>
+
+            </div>
+
+
+
+            <div class="card">
+
+                <h3>Bukaanadii Hore</h3>
+
+                <input type="text" id="search" class="search-box" onkeyup="searchTable()" placeholder="Raadi...">
+
+                <div style="max-height: 500px; overflow-y: auto;">
+
+                    <table>
+
+                        <thead>
+
+                            <tr><th>Tikidh</th><th>Bukaanka</th><th>Dhakhtarka</th><th>Waqtiga</th><th>Action</th></tr>
+
+                        </thead>
+
+                        <tbody id="historyBody"></tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <script>
+
+        // 1. Isku xirka Firebase (Waxaan geliyey xogtaadii saxda ahayd)
+
+        const firebaseConfig = { 
+
+            apiKey: "AIzaSyB5LuhewiHycIpkMWq-3HUW8yRlsSy4fLA", // Furahaaga saxda ah
+
+            authDomain: "carequeue-manager.firebaseapp.com",
+
+            databaseURL: "https://carequeue-manager-default-rtdb.firebaseio.com",
+
+            projectId: "carequeue-manager",
+
+            storageBucket: "carequeue-manager.appspot.com",
+
+            messagingSenderId: "328741466836",
+
+            appId: "1:328741466836:web:d073eb2a501944e6fa8141"
+
+        };
+
+        
+
+        firebase.initializeApp(firebaseConfig);
+
+        const db = firebase.database();
+
+        const auth = firebase.auth();
+
+
+
+        // 2. Maareynta Login-ka (Waxaan ku daray .trim() si uusan space khalad u keenin)
+
+        function handleLogin() {
+
+            const email = document.getElementById('loginEmail').value.trim();
+
+            const pass = document.getElementById('loginPass').value.trim();
+
+            
+
+            if(!email || !pass) {
+
+                alert("Fadlan buuxi email-ka iyo password-ka");
+
+                return;
+
+            }
+
+
+
+            auth.signInWithEmailAndPassword(email, pass)
+
+                .catch(err => alert("Khalad: " + err.message));
+
+        }
+
+
+
+        // 3. Hubi haddii qofku soo galay
+
+        auth.onAuthStateChanged(user => {
+
+            if (user) {
+
+                document.getElementById('login-overlay').style.display = 'none';
+
+                document.getElementById('mainGrid').style.display = 'grid';
+
+                loadHistory(); 
+
+            } else {
+
+                document.getElementById('login-overlay').style.display = 'flex';
+
+                document.getElementById('mainGrid').style.display = 'none';
+
+            }
+
+        });
+
+
+
+        // 4. Shaqada Dirista Xogta
+
+        function sendToTV() {
+
+            const name = document.getElementById('pName').value;
+
+            const num = document.getElementById('pNum').value;
+
+            const room = document.getElementById('pRoom').value;
+
+            const docName = document.getElementById('dName').value;
+
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+
+
+            if(name && num && room && docName) {
+
+                db.ref('live_queue').set({ name, num, room, doctor: docName });
+
+                db.ref('patient_history').push({ name, num, room, doctor: docName, time });
+
+                
+
+                // Nadiifi meelaha wax laga qoro
+
+                document.getElementById('pName').value = "";
+
+                document.getElementById('pNum').value = "";
+
+                document.getElementById('pPhone').value = "";
+
+                alert("Waa la diray!");
+
+            } else {
+
+                alert("Fadlan buuxi dhammaan meelaha bannaan!");
+
+            }
+
+        }
+
+
+
+        // 5. Soo Akhrinta History-ga
+
+        function loadHistory() {
+
+            db.ref('patient_history').on('value', (snapshot) => {
+
+                const tbody = document.getElementById('historyBody');
+
+                tbody.innerHTML = "";
+
+                snapshot.forEach((child) => {
+
+                    const item = child.val();
+
+                    tbody.insertAdjacentHTML('afterbegin', `<tr>
+
+                        <td><b>${item.num}</b></td>
+
+                        <td>${item.name}</td>
+
+                        <td>Dr. ${item.doctor}</td>
+
+                        <td>${item.time}</td>
+
+                        <td><button style="background:var(--red); color:white; border:none; padding:5px; cursor:pointer; border-radius:3px;" onclick="deleteItem('${child.key}')">Tirtir</button></td>
+
+                    </tr>`);
+
+                });
+
+            });
+
+        }
+
+
+
+        function deleteItem(id) { if(confirm("Ma hubtaa inaad tirtirto?")) db.ref('patient_history').child(id).remove(); }
+
+
+
+        // 6. Raadinta (Search)
+
+        function searchTable() {
+
+            let input = document.getElementById("search").value.toUpperCase();
+
+            let tr = document.getElementById("historyBody").getElementsByTagName("tr");
+
+            for (let i = 0; i < tr.length; i++) {
+
+                tr[i].style.display = tr[i].innerText.toUpperCase().indexOf(input) > -1 ? "" : "none";
+
+            }
+
+        }
+
+    </script>
+
 </body>
+
 </html>
