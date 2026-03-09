@@ -16,7 +16,7 @@
         .login-box { background: var(--card); padding: 40px; border-radius: 12px; width: 350px; text-align: center; border: 1px solid var(--blue); }
         
         /* Main App Style */
-        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; display: none; } /* Qarso ilaa laga galo */
+        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; display: none; } 
         .card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         h2 { color: var(--gold); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
         h3 { border-bottom: 1px solid var(--blue); padding-bottom: 10px; margin-bottom: 15px; }
@@ -77,29 +77,41 @@
     </div>
 
     <script>
-        // 1. Isku xirka Firebase (Hubi inuu yahay koodhkaaga saxda ah)
+        // 1. Isku xirka Firebase (Waxaan geliyey xogtaadii saxda ahayd)
         const firebaseConfig = { 
-            apiKey: "AIzaSy...", // Halkan geli API Key-gaaga haddii uusan ku jirin
-            databaseURL: "https://carequeue-manager-default-rtdb.firebaseio.com/" 
+            apiKey: "AIzaSyB5LuhewiHycIpkMWq-3HUW8yRlsSy4fLA", // Furahaaga saxda ah
+            authDomain: "carequeue-manager.firebaseapp.com",
+            databaseURL: "https://carequeue-manager-default-rtdb.firebaseio.com",
+            projectId: "carequeue-manager",
+            storageBucket: "carequeue-manager.appspot.com",
+            messagingSenderId: "328741466836",
+            appId: "1:328741466836:web:d073eb2a501944e6fa8141"
         };
+        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const auth = firebase.auth();
 
-        // 2. Maareynta Login-ka
+        // 2. Maareynta Login-ka (Waxaan ku daray .trim() si uusan space khalad u keenin)
         function handleLogin() {
-            const email = document.getElementById('loginEmail').value;
-            const pass = document.getElementById('loginPass').value;
+            const email = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+            
+            if(!email || !pass) {
+                alert("Fadlan buuxi email-ka iyo password-ka");
+                return;
+            }
+
             auth.signInWithEmailAndPassword(email, pass)
                 .catch(err => alert("Khalad: " + err.message));
         }
 
-        // 3. Hubi haddii qofku soo galay (Auth Listener)
+        // 3. Hubi haddii qofku soo galay
         auth.onAuthStateChanged(user => {
             if (user) {
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('mainGrid').style.display = 'grid';
-                loadHistory(); // Soo rar xogta markii uu Login dhaco
+                loadHistory(); 
             } else {
                 document.getElementById('login-overlay').style.display = 'flex';
                 document.getElementById('mainGrid').style.display = 'none';
@@ -117,9 +129,14 @@
             if(name && num && room && docName) {
                 db.ref('live_queue').set({ name, num, room, doctor: docName });
                 db.ref('patient_history').push({ name, num, room, doctor: docName, time });
+                
+                // Nadiifi meelaha wax laga qoro
                 document.getElementById('pName').value = "";
                 document.getElementById('pNum').value = "";
+                document.getElementById('pPhone').value = "";
                 alert("Waa la diray!");
+            } else {
+                alert("Fadlan buuxi dhammaan meelaha bannaan!");
             }
         }
 
@@ -135,13 +152,22 @@
                         <td>${item.name}</td>
                         <td>Dr. ${item.doctor}</td>
                         <td>${item.time}</td>
-                        <td><button style="background:var(--red); color:white; border:none; padding:5px; cursor:pointer;" onclick="deleteItem('${child.key}')">Tirtir</button></td>
+                        <td><button style="background:var(--red); color:white; border:none; padding:5px; cursor:pointer; border-radius:3px;" onclick="deleteItem('${child.key}')">Tirtir</button></td>
                     </tr>`);
                 });
             });
         }
 
-        function deleteItem(id) { if(confirm("Ma hubtaa?")) db.ref('patient_history').child(id).remove(); }
+        function deleteItem(id) { if(confirm("Ma hubtaa inaad tirtirto?")) db.ref('patient_history').child(id).remove(); }
+
+        // 6. Raadinta (Search)
+        function searchTable() {
+            let input = document.getElementById("search").value.toUpperCase();
+            let tr = document.getElementById("historyBody").getElementsByTagName("tr");
+            for (let i = 0; i < tr.length; i++) {
+                tr[i].style.display = tr[i].innerText.toUpperCase().indexOf(input) > -1 ? "" : "none";
+            }
+        }
     </script>
 </body>
 </html>
