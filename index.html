@@ -5,10 +5,18 @@
     <title>CareQueue | Reception Admin</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
     <style>
         :root { --blue: #2563eb; --gold: #fbbf24; --dark: #0f172a; --card: #1e293b; --red: #ef4444; --green: #10b981; }
         body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
-        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; }
+        
+        /* Login Style */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .login-box { background: var(--card); padding: 40px; border-radius: 12px; width: 350px; text-align: center; border: 1px solid var(--blue); }
+        
+        /* Main App Style */
+        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; display: none; } /* Qarso ilaa laga galo */
         .card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         h2 { color: var(--gold); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
         h3 { border-bottom: 1px solid var(--blue); padding-bottom: 10px; margin-bottom: 15px; }
@@ -16,123 +24,124 @@
         input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
         .btn { background: var(--blue); color: white; padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 10px; transition: 0.3s; }
         .btn:hover { background: #1d4ed8; transform: translateY(-2px); }
+        .logout-btn { background: var(--red); padding: 8px 15px; float: right; cursor: pointer; border: none; color: white; border-radius: 5px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e293b; border-radius: 8px; overflow: hidden; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #334155; font-size: 14px; }
         th { background: #1e293b; color: var(--gold); }
-        .search-box { background: #0f172a; border: 2px solid var(--blue); padding: 12px; width: 100%; border-radius: 8px; color: white; margin-bottom: 20px; outline: none; }
     </style>
 </head>
 <body>
-    <h2>CAREQUEUE RECEPTION CONTROL</h2>
-    <div class="grid">
-        <div class="card">
-            <h3>Diiwaangelinta Cusub</h3>
-            
-            <label>Macluumaadka Bukaanka</label>
-            <input type="text" id="pName" placeholder="Magaca Bukaanka">
-            <input type="text" id="pNum" placeholder="Lambar Tikidh (Tusaale: 001)">
-            <input type="tel" id="pPhone" placeholder="Mobile Bukaanka">
-            
-            <label>Macluumaadka Dhakhtarka</label>
-            <input type="text" id="dName" placeholder="Magaca Dhakhtarka">
-            <input type="number" id="pRoom" placeholder="Qolka Dhakhtarka (Room #)">
-            
-            <label>Ahmiyadda & Xiriirka</label>
-            <select id="pPriority">
-                <option value="Caadi">Caadi</option>
-                <option value="Deg-deg">Deg-deg</option>
-            </select>
-            <input type="tel" id="pGuardian" placeholder="Mobile-ka Ehelka (Hadii uu jiro)">
-            
-            <button class="btn" onclick="sendToTV()">U DIR TV-GA & KEYDI</button>
-        </div>
 
-        <div class="card">
-            <h3>Bukaanadii Hore & Baaritaan</h3>
-            <input type="text" id="search" class="search-box" onkeyup="searchTable()" placeholder="Raadi Magac, Mobile, ama Dhakhtar...">
-            <div style="max-height: 600px; overflow-y: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Tikidh</th>
-                            <th>Bukaanka</th>
-                            <th>Dhakhtarka</th>
-                            <th>Qolka</th>
-                            <th>Waqtiga</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyBody"></tbody>
-                </table>
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2>CAREQUEUE LOGIN</h2>
+            <input type="email" id="loginEmail" placeholder="Email-ka Isbitaalka">
+            <input type="password" id="loginPass" placeholder="Password-ka">
+            <button class="btn" onclick="handleLogin()">GALO NIDAAMKA</button>
+        </div>
+    </div>
+
+    <div id="admin-content">
+        <button class="logout-btn" onclick="firebase.auth().signOut()">Logout</button>
+        <h2>CAREQUEUE RECEPTION CONTROL</h2>
+        <div class="grid" id="mainGrid">
+            <div class="card">
+                <h3>Diiwaangelinta Cusub</h3>
+                <label>Macluumaadka Bukaanka</label>
+                <input type="text" id="pName" placeholder="Magaca Bukaanka">
+                <input type="text" id="pNum" placeholder="Lambar Tikidh">
+                <input type="tel" id="pPhone" placeholder="Mobile Bukaanka">
+                <label>Macluumaadka Dhakhtarka</label>
+                <input type="text" id="dName" placeholder="Magaca Dhakhtarka">
+                <input type="number" id="pRoom" placeholder="Qolka Dhakhtarka">
+                <select id="pPriority">
+                    <option value="Caadi">Caadi</option>
+                    <option value="Deg-deg">Deg-deg</option>
+                </select>
+                <button class="btn" onclick="sendToTV()">U DIR TV-GA & KEYDI</button>
+            </div>
+
+            <div class="card">
+                <h3>Bukaanadii Hore</h3>
+                <input type="text" id="search" class="search-box" onkeyup="searchTable()" placeholder="Raadi...">
+                <div style="max-height: 500px; overflow-y: auto;">
+                    <table>
+                        <thead>
+                            <tr><th>Tikidh</th><th>Bukaanka</th><th>Dhakhtarka</th><th>Waqtiga</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="historyBody"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Isku xirka Firebase
-        const firebaseConfig = { databaseURL: "https://carequeue-manager-default-rtdb.firebaseio.com/" };
+        // 1. Isku xirka Firebase (Hubi inuu yahay koodhkaaga saxda ah)
+        const firebaseConfig = { 
+            apiKey: "AIzaSy...", // Halkan geli API Key-gaaga haddii uusan ku jirin
+            databaseURL: "https://carequeue-manager-default-rtdb.firebaseio.com/" 
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        const auth = firebase.auth();
 
+        // 2. Maareynta Login-ka
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+            auth.signInWithEmailAndPassword(email, pass)
+                .catch(err => alert("Khalad: " + err.message));
+        }
+
+        // 3. Hubi haddii qofku soo galay (Auth Listener)
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('mainGrid').style.display = 'grid';
+                loadHistory(); // Soo rar xogta markii uu Login dhaco
+            } else {
+                document.getElementById('login-overlay').style.display = 'flex';
+                document.getElementById('mainGrid').style.display = 'none';
+            }
+        });
+
+        // 4. Shaqada Dirista Xogta
         function sendToTV() {
             const name = document.getElementById('pName').value;
             const num = document.getElementById('pNum').value;
             const room = document.getElementById('pRoom').value;
-            const docName = document.getElementById('dName').value; // Magaca Dhakhtarka
-            const phone = document.getElementById('pPhone').value;
-            const guardian = document.getElementById('pGuardian').value;
-            const prio = document.getElementById('pPriority').value;
+            const docName = document.getElementById('dName').value;
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
             if(name && num && room && docName) {
-                const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                
-                // 1. U dir TV-ga (live_queue) - Waxaa la arki doonaa Bukaanka iyo Dhakhtarka
-                db.ref('live_queue').set({ 
-                    name: name, 
-                    num: num, 
-                    room: room,
-                    doctor: docName 
-                });
-
-                // 2. Ku keydi Taariikhda (patient_history)
-                db.ref('patient_history').push({ 
-                    name, num, room, doctor: docName, phone, guardian, prio, time 
-                });
-
-                // Nadiifi meelaha wax laga qoro (Cidda dhakhtarka laguma daro si aan mar walba loo qorin)
+                db.ref('live_queue').set({ name, num, room, doctor: docName });
+                db.ref('patient_history').push({ name, num, room, doctor: docName, time });
                 document.getElementById('pName').value = "";
                 document.getElementById('pNum').value = "";
-                document.getElementById('pPhone').value = "";
-                alert("Xogta waa la diray!");
-            } else {
-                alert("Fadlan buuxi Magaca Bukaanka, Tikidhka, Dhakhtarka iyo Qolka.");
+                alert("Waa la diray!");
             }
         }
 
-        // Soo akhrinta History-ga si toos ah
-        db.ref('patient_history').on('value', (snapshot) => {
-            const tbody = document.getElementById('historyBody');
-            tbody.innerHTML = "";
-            snapshot.forEach((child) => {
-                const item = child.val();
-                tbody.insertAdjacentHTML('afterbegin', `<tr>
-                    <td><b>${item.num}</b></td>
-                    <td>${item.name}</td>
-                    <td>Dr. ${item.doctor}</td>
-                    <td>Qolka ${item.room}</td>
-                    <td style="color:var(--gold)">${item.time}</td>
-                    <td><button style="background:var(--red); color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;" onclick="deleteItem('${child.key}')">Tirtir</button></td>
-                </tr>`);
+        // 5. Soo Akhrinta History-ga
+        function loadHistory() {
+            db.ref('patient_history').on('value', (snapshot) => {
+                const tbody = document.getElementById('historyBody');
+                tbody.innerHTML = "";
+                snapshot.forEach((child) => {
+                    const item = child.val();
+                    tbody.insertAdjacentHTML('afterbegin', `<tr>
+                        <td><b>${item.num}</b></td>
+                        <td>${item.name}</td>
+                        <td>Dr. ${item.doctor}</td>
+                        <td>${item.time}</td>
+                        <td><button style="background:var(--red); color:white; border:none; padding:5px; cursor:pointer;" onclick="deleteItem('${child.key}')">Tirtir</button></td>
+                    </tr>`);
+                });
             });
-        });
-
-        function deleteItem(id) { if(confirm("Ma hubtaa inaad tirtirto bukaankan?")) db.ref('patient_history').child(id).remove(); }
-        
-        function searchTable() {
-            let val = document.getElementById('search').value.toLowerCase();
-            let rows = document.getElementById('historyBody').getElementsByTagName('tr');
-            for(let r of rows) { r.style.display = r.innerText.toLowerCase().includes(val) ? "" : "none"; }
         }
+
+        function deleteItem(id) { if(confirm("Ma hubtaa?")) db.ref('patient_history').child(id).remove(); }
     </script>
 </body>
 </html>
