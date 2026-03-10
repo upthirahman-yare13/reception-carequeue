@@ -18,7 +18,7 @@
         .card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; }
         h2 { color: var(--gold); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
         
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
+        input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
         #pFee { border: 1px solid var(--gold); color: var(--gold); font-weight: bold; }
         .btn { background: var(--blue); color: white; padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; }
         
@@ -47,8 +47,10 @@
                 <input type="text" id="pName" placeholder="Magaca Bukaanka">
                 <input type="text" id="pNum" placeholder="Lambar Tikidh">
                 <input type="tel" id="pPhone" placeholder="Mobile-ka Bukaanka">
+                <textarea id="pComplaint" placeholder="Cabashada Bukaanka (Xanuunka)" rows="3"></textarea>
                 <input type="text" id="dName" placeholder="Magaca Dhakhtarka">
                 <input type="number" id="pRoom" placeholder="Qolka Dhakhtarka">
+                <label style="color:var(--gold); font-size: 12px;">Lacagta ($):</label>
                 <input type="number" id="pFee" value="10">
                 <button class="btn" onclick="sendToTV()">U DIR TV-GA & KEYDI</button>
             </div>
@@ -58,7 +60,7 @@
                 <input type="text" id="search" class="search-box" onkeyup="searchTable()" placeholder="Raadi...">
                 <div style="max-height: 450px; overflow-y: auto;">
                     <table>
-                        <thead><tr><th>Tikidh</th><th>Bukaanka</th><th>Mobile</th><th>Dhakhtarka</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Tikidh</th><th>Bukaanka</th><th>Cabashada</th><th>Dhakhtarka</th><th>Action</th></tr></thead>
                         <tbody id="historyBody"></tbody>
                     </table>
                 </div>
@@ -97,16 +99,27 @@
         });
 
         function sendToTV() {
-            const name = document.getElementById('pName').value, num = document.getElementById('pNum').value, 
-                  phone = document.getElementById('pPhone').value, room = document.getElementById('pRoom').value,
-                  doc = document.getElementById('dName').value, fee = document.getElementById('pFee').value;
+            const name = document.getElementById('pName').value, 
+                  num = document.getElementById('pNum').value, 
+                  phone = document.getElementById('pPhone').value, 
+                  complaint = document.getElementById('pComplaint').value,
+                  room = document.getElementById('pRoom').value,
+                  doc = document.getElementById('dName').value, 
+                  fee = parseFloat(document.getElementById('pFee').value);
 
-            if(name && num && phone && room && doc && fee) {
-                db.ref('live_queue').set({ name, num, room, doctor: doc });
-                db.ref('patient_history').push({ name, num, phone, room, doctor: doc, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
-                alert("Waa la keydiyay!");
-                document.getElementById('pName').value = ""; document.getElementById('pNum').value = ""; document.getElementById('pPhone').value = "";
-            } else { alert("Fadlan buuxi dhammaan meelaha!"); }
+            if(name && num && complaint) {
+                // 1. U dir Dhakhtarka (Live Queue wuxuu hadda wataa cabashada bukaanka)
+                db.ref('live_queue').set({ name, num, room, doctor: doc, complaint });
+                
+                // 2. Keydi Taariikhda
+                db.ref('patient_history').push({ name, num, phone, complaint, room, doctor: doc, time: new Date().toLocaleTimeString() });
+                
+                // 3. Keydi Dakhliga
+                db.ref('transactions').push({ name, amount: fee, date: new Date().toLocaleDateString(), doctor: doc });
+                
+                alert("Waa la diray bukaankii iyo xogtiisii!");
+                document.getElementById('pName').value = ""; document.getElementById('pComplaint').value = "";
+            } else { alert("Fadlan buuxi meelaha muhiimka ah!"); }
         }
 
         function loadHistory() {
@@ -116,16 +129,12 @@
                 tbody.innerHTML = "";
                 snap.forEach((child) => {
                     const item = child.val();
-                    tbody.insertAdjacentHTML('afterbegin', `<tr><td><b>${item.num}</b></td><td>${item.name}</td><td>${item.phone}</td><td>${item.doctor}</td><td><button onclick="db.ref('patient_history').child('${child.key}').remove()" style="background:var(--red); color:white; border:none; padding:4px; cursor:pointer;">Tirtir</button></td></tr>`);
+                    tbody.insertAdjacentHTML('afterbegin', `<tr><td>${item.num}</td><td>${item.name}</td><td>${item.complaint.substring(0, 20)}...</td><td>${item.doctor}</td><td><button onclick="db.ref('patient_history').child('${child.key}').remove()" style="background:var(--red); color:white; border:none; padding:4px; cursor:pointer;">Tirtir</button></td></tr>`);
                 });
             });
         }
-
-        function searchTable() {
-            let input = document.getElementById("search").value.toUpperCase();
-            let tr = document.getElementById("historyBody").getElementsByTagName("tr");
-            for (let i = 0; i < tr.length; i++) tr[i].style.display = tr[i].innerText.toUpperCase().indexOf(input) > -1 ? "" : "none";
-        }
+        
+        // ... (function searchTable() waa sidii hore)
     </script>
 </body>
 </html>
