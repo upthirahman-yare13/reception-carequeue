@@ -1,0 +1,11 @@
+<div class="card">
+    <h2>Dakhliga Maanta: $<span id="total-revenue">0</span></h2>
+</div>
+
+<script>
+    db.ref('transactions').on('value', (snap) => {
+        let total = 0;
+        snap.forEach(child => { total += child.val().amount; });
+        document.getElementById('total-revenue').innerText = total;
+    });
+</script>
