@@ -25,6 +25,9 @@
         h2 { color: var(--gold); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
         
         input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
+        /* Lacagta Midabkeeda Gold ka dhig */
+        #pFee { border: 1px solid var(--gold); color: var(--gold); font-weight: bold; }
+
         .btn { background: var(--blue); color: white; padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; transition: 0.3s; }
         .btn:hover { background: #1d4ed8; }
         
@@ -53,6 +56,8 @@
             <a href="reception.html" class="active">✍️ Reception</a>
             <a href="doctor.html">👨‍⚕️ Dhakhtarka</a>
             <a href="pharmacy.html">💊 Farmashiyaha</a>
+            <a href="lab.html">🔬 Shaybaarka</a>
+            <a href="reports.html">📊 Warbixinta</a>
             <button onclick="firebase.auth().signOut()" style="background:var(--red); border:none; color:white; padding:5px 10px; border-radius:4px; cursor:pointer;">Logout</button>
         </div>
 
@@ -65,6 +70,10 @@
                 <input type="text" id="pNum" placeholder="Lambar Tikidh">
                 <input type="text" id="dName" placeholder="Magaca Dhakhtarka">
                 <input type="number" id="pRoom" placeholder="Qolka Dhakhtarka">
+                
+                <label style="color: var(--gold); font-size: 13px;">Lacagta laga rabo ($):</label>
+                <input type="number" id="pFee" placeholder="Tusaale: 15" value="10">
+
                 <select id="pPriority">
                     <option value="Caadi">Caadi</option>
                     <option value="Deg-deg">Deg-deg</option>
@@ -88,7 +97,6 @@
     </div>
 
     <script>
-        // HALKAN KU DHEX BEDEL XOGTAADA FIREBASE (API KEY IWM)
         const firebaseConfig = { 
             apiKey: "AIzaSyB5LuhewiHycIpkMWq-3HUW8yRlsSy4fLA",
             authDomain: "carequeue-manager.firebaseapp.com",
@@ -103,7 +111,6 @@
         const db = firebase.database();
         const auth = firebase.auth();
 
-        // Login Logic
         function handleLogin() {
             const email = document.getElementById('loginEmail').value;
             const pass = document.getElementById('loginPass').value;
@@ -121,25 +128,38 @@
             }
         });
 
-        // Save and Voice Logic
         function sendToTV() {
             const name = document.getElementById('pName').value;
             const num = document.getElementById('pNum').value;
             const room = document.getElementById('pRoom').value;
             const doc = document.getElementById('dName').value;
+            const fee = document.getElementById('pFee').value; // Lacagta laga qaaday
+            const date = new Date().toISOString().split('T')[0]; // Taariikhda Maanta (YYYY-MM-DD)
             const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-            if(name && num && room && doc) {
+            if(name && num && room && doc && fee) {
+                // 1. U dir Safka TV-ga
                 db.ref('live_queue').set({ name, num, room, doctor: doc });
-                db.ref('patient_history').push({ name, num, room, doctor: doc, time });
                 
+                // 2. Keydi Taariikhda Bukaanka
+                db.ref('patient_history').push({ name, num, room, doctor: doc, time, fee: parseFloat(fee), date: date });
+                
+                // 3. Keydi Lacagta (Transactions) ee Dashboard-ka iyo Warbixinta
+                db.ref('transactions').push({
+                    patientName: name,
+                    amount: parseFloat(fee),
+                    date: date,
+                    time: time,
+                    doctor: doc
+                });
+
                 // CODKA (Voice Alert)
                 let msg = new SpeechSynthesisUtterance("Bukaanka " + name + ", Lambar " + num + ", fadlan u gudub qolka " + room);
                 window.speechSynthesis.speak(msg);
 
-                alert("Waa la diray!");
+                alert("Waa la keydiyay, lacagtana waa la diiwaangeliyey!");
                 document.getElementById('pName').value = ""; document.getElementById('pNum').value = "";
-            } else { alert("Fadlan buuxi meelaha bannaan!"); }
+            } else { alert("Fadlan buuxi dhammaan meelaha bannaan, gaar ahaan lacagta!"); }
         }
 
         function loadHistory() {
@@ -154,13 +174,13 @@
                         <td>${item.name}</td>
                         <td>${item.doctor}</td>
                         <td>${item.time}</td>
-                        <td><button onclick="deleteItem('${child.key}')" style="background:var(--red); color:white; border:none; padding:4px; cursor:pointer;">Tirtir</button></td>
+                        <td><button onclick="deleteItem('${child.key}')" style="background:var(--red); color:white; border:none; padding:4px; cursor:pointer; border-radius:3px;">Tirtir</button></td>
                     </tr>`);
                 });
             });
         }
 
-        function deleteItem(id) { if(confirm("Ma hubtaa?")) db.ref('patient_history').child(id).remove(); }
+        function deleteItem(id) { if(confirm("Ma hubtaa inaad tirtirto?")) db.ref('patient_history').child(id).remove(); }
 
         function searchTable() {
             let input = document.getElementById("search").value.toUpperCase();
