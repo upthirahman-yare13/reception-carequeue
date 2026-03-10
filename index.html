@@ -11,11 +11,9 @@
         :root { --blue: #2563eb; --gold: #fbbf24; --dark: #0f172a; --card: #1e293b; --red: #ef4444; --green: #10b981; }
         body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; margin: 0; }
         
-        /* Login Overlay */
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); display: flex; align-items: center; justify-content: center; z-index: 1000; }
         .login-box { background: var(--card); padding: 40px; border-radius: 12px; width: 350px; text-align: center; border: 1px solid var(--blue); }
         
-        /* Main Layout */
         .sidebar-nav { background: var(--card); padding: 10px; margin-bottom: 20px; border-radius: 8px; display: flex; gap: 10px; justify-content: center; }
         .sidebar-nav a { color: white; text-decoration: none; padding: 8px 15px; border-radius: 5px; background: #334155; font-size: 14px; }
         .sidebar-nav a.active { background: var(--blue); }
@@ -25,14 +23,13 @@
         h2 { color: var(--gold); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
         
         input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
-        /* Lacagta Midabkeeda Gold ka dhig */
         #pFee { border: 1px solid var(--gold); color: var(--gold); font-weight: bold; }
 
         .btn { background: var(--blue); color: white; padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; transition: 0.3s; }
         .btn:hover { background: #1d4ed8; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #334155; font-size: 13px; }
         th { color: var(--gold); }
         .search-box { margin-bottom: 15px; border: 2px solid var(--blue); }
 
@@ -68,6 +65,7 @@
                 <h3>Diiwaangelinta Cusub</h3>
                 <input type="text" id="pName" placeholder="Magaca Bukaanka">
                 <input type="text" id="pNum" placeholder="Lambar Tikidh">
+                <input type="tel" id="pPhone" placeholder="Mobile-ka Bukaanka">
                 <input type="text" id="dName" placeholder="Magaca Dhakhtarka">
                 <input type="number" id="pRoom" placeholder="Qolka Dhakhtarka">
                 
@@ -87,7 +85,7 @@
                 <div style="max-height: 450px; overflow-y: auto;">
                     <table>
                         <thead>
-                            <tr><th>Tikidh</th><th>Bukaanka</th><th>Dhakhtarka</th><th>Waqtiga</th><th>Action</th></tr>
+                            <tr><th>Tikidh</th><th>Bukaanka</th><th>Mobile</th><th>Dhakhtarka</th><th>Action</th></tr>
                         </thead>
                         <tbody id="historyBody"></tbody>
                     </table>
@@ -131,20 +129,18 @@
         function sendToTV() {
             const name = document.getElementById('pName').value;
             const num = document.getElementById('pNum').value;
+            const phone = document.getElementById('pPhone').value; // Mobile ka bukaanka
             const room = document.getElementById('pRoom').value;
             const doc = document.getElementById('dName').value;
-            const fee = document.getElementById('pFee').value; // Lacagta laga qaaday
-            const date = new Date().toISOString().split('T')[0]; // Taariikhda Maanta (YYYY-MM-DD)
+            const fee = document.getElementById('pFee').value;
+            const date = new Date().toISOString().split('T')[0];
             const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-            if(name && num && room && doc && fee) {
-                // 1. U dir Safka TV-ga
+            if(name && num && phone && room && doc && fee) {
                 db.ref('live_queue').set({ name, num, room, doctor: doc });
+                // Halkan ayaan ku daray phone xogta la push-gareeyo
+                db.ref('patient_history').push({ name, num, phone, room, doctor: doc, time, fee: parseFloat(fee), date: date });
                 
-                // 2. Keydi Taariikhda Bukaanka
-                db.ref('patient_history').push({ name, num, room, doctor: doc, time, fee: parseFloat(fee), date: date });
-                
-                // 3. Keydi Lacagta (Transactions) ee Dashboard-ka iyo Warbixinta
                 db.ref('transactions').push({
                     patientName: name,
                     amount: parseFloat(fee),
@@ -153,13 +149,14 @@
                     doctor: doc
                 });
 
-                // CODKA (Voice Alert)
                 let msg = new SpeechSynthesisUtterance("Bukaanka " + name + ", Lambar " + num + ", fadlan u gudub qolka " + room);
                 window.speechSynthesis.speak(msg);
 
-                alert("Waa la keydiyay, lacagtana waa la diiwaangeliyey!");
-                document.getElementById('pName').value = ""; document.getElementById('pNum').value = "";
-            } else { alert("Fadlan buuxi dhammaan meelaha bannaan, gaar ahaan lacagta!"); }
+                alert("Waa la keydiyay!");
+                document.getElementById('pName').value = ""; 
+                document.getElementById('pNum').value = "";
+                document.getElementById('pPhone').value = "";
+            } else { alert("Fadlan buuxi dhammaan meelaha bannaan!"); }
         }
 
         function loadHistory() {
@@ -172,15 +169,15 @@
                     tbody.insertAdjacentHTML('afterbegin', `<tr>
                         <td><b>${item.num}</b></td>
                         <td>${item.name}</td>
+                        <td>${item.phone}</td>
                         <td>${item.doctor}</td>
-                        <td>${item.time}</td>
                         <td><button onclick="deleteItem('${child.key}')" style="background:var(--red); color:white; border:none; padding:4px; cursor:pointer; border-radius:3px;">Tirtir</button></td>
                     </tr>`);
                 });
             });
         }
 
-        function deleteItem(id) { if(confirm("Ma hubtaa inaad tirtirto?")) db.ref('patient_history').child(id).remove(); }
+        function deleteItem(id) { if(confirm("Ma hubtaa?")) db.ref('patient_history').child(id).remove(); }
 
         function searchTable() {
             let input = document.getElementById("search").value.toUpperCase();
