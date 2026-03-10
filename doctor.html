@@ -1,25 +1,11 @@
+<link rel="stylesheet" href="style.css">
+<script src="app.js"></script>
 <div class="card">
-    <h3>Bukaanka Hadda Sugaya: <span id="doc-name">-</span></h3>
-    <button class="btn" onclick="sendToPharmacy()">U DIR FARMASHIYAHA</button>
-    <button class="btn" onclick="sendToLab()" style="background:var(--green)">U DIR SHAYBAARKA</button>
+    <h3>Bukaanka Sugaya: <span id="pName">-</span></h3>
+    <button class="btn" onclick="sendTo('pharmacy_queue')">💊 FARMASHIYAHA</button>
+    <button class="btn" style="background:var(--green)" onclick="sendTo('lab_queue')">🔬 SHAYBAARKA</button>
 </div>
-
 <script>
-    // Dhakhtarka wuxuu akhrinayaa live_queue
-    db.ref('live_queue').on('value', (snap) => {
-        const p = snap.val();
-        document.getElementById('doc-name').innerText = p ? p.name : "Ma jiro bukaan";
-    });
-
-    function sendToPharmacy() {
-        const p = { name: document.getElementById('doc-name').innerText, time: new Date().toLocaleTimeString() };
-        db.ref('pharmacy_queue').push(p);
-        alert("Bukaanka waxaa loo diray Farmashiyaha");
-    }
-
-    function sendToLab() {
-        const p = { name: document.getElementById('doc-name').innerText };
-        db.ref('lab_queue').push(p);
-        alert("Bukaanka waxaa loo diray Shaybaarka");
-    }
+    db.ref('live_queue').on('value', s => document.getElementById('pName').innerText = s.val() ? s.val().name : "Ma jiro");
+    function sendTo(p) { db.ref(p).push({name: document.getElementById('pName').innerText}); alert("Waa la diray"); }
 </script>
