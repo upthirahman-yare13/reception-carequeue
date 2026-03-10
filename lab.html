@@ -1,0 +1,14 @@
+<div class="card">
+    <h3>Bukaanka Sugaya Baadhitaan</h3>
+    <ul id="lab-list"></ul>
+</div>
+
+<script>
+    db.ref('lab_queue').on('value', (snap) => {
+        const list = document.getElementById('lab-list');
+        list.innerHTML = "";
+        snap.forEach(child => {
+            list.insertAdjacentHTML('beforeend', `<li>${child.val().name}</li>`);
+        });
+    });
+</script>
