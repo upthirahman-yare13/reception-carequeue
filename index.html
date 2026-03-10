@@ -2,112 +2,193 @@
 <html lang="so">
 <head>
     <meta charset="UTF-8">
-    <title>CareQueue | Dashboard</title>
+    <title>CareQueue | Reception Admin</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
     <style>
-        :root { --blue: #2563eb; --gold: #fbbf24; --dark: #0f172a; --card: #1e293b; --red: #ef4444; }
+        :root { --blue: #2563eb; --gold: #fbbf24; --dark: #0f172a; --card: #1e293b; --red: #ef4444; --green: #10b981; }
         body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; margin: 0; }
+        
+        /* Login Overlay */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .login-box { background: var(--card); padding: 40px; border-radius: 12px; width: 350px; text-align: center; border: 1px solid var(--blue); }
+        
+        /* Main Layout */
         .sidebar-nav { background: var(--card); padding: 10px; margin-bottom: 20px; border-radius: 8px; display: flex; gap: 10px; justify-content: center; }
-        .sidebar-nav a { color: white; text-decoration: none; padding: 8px 15px; border-radius: 5px; background: #334155; cursor: pointer; }
+        .sidebar-nav a { color: white; text-decoration: none; padding: 8px 15px; border-radius: 5px; background: #334155; font-size: 14px; }
         .sidebar-nav a.active { background: var(--blue); }
-        .content-section { display: none; }
-        .active-section { display: block; }
-        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; }
+
+        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; display: none; } 
         .card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; }
+        h2 { color: var(--gold); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
+        
         input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
-        .btn { background: var(--blue); color: white; padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; }
+        /* Lacagta Midabkeeda Gold ka dhig */
+        #pFee { border: 1px solid var(--gold); color: var(--gold); font-weight: bold; }
+
+        .btn { background: var(--blue); color: white; padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; transition: 0.3s; }
+        .btn:hover { background: #1d4ed8; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #334155; font-size: 13px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
+        th { color: var(--gold); }
+        .search-box { margin-bottom: 15px; border: 2px solid var(--blue); }
+
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-    <div class="sidebar-nav">
-        <a onclick="showSection('reception-section', this)" class="active">✍️ Reception</a>
-        <a onclick="showSection('doctor-section', this)">👨‍⚕️ Dhakhtarka</a>
-    </div>
-
-    <div id="reception-section" class="content-section active-section">
-        <div class="grid">
-            <div class="card">
-                <h3>Diiwaangelinta</h3>
-                <input type="text" id="pName" placeholder="Magaca">
-                <input type="text" id="pNum" placeholder="Tikidh">
-                <input type="tel" id="pPhone" placeholder="Mobile">
-                <input type="text" id="dName" placeholder="Dhakhtar">
-                <input type="number" id="pRoom" placeholder="Qolka">
-                <button class="btn" onclick="sendToTV()">U DIR TV-GA & KEYDI</button>
-            </div>
-            <div class="card">
-                <h3>Bukaanadii Hore</h3>
-                <table id="historyTable">
-                    <thead><tr><th>Tikidh</th><th>Magaca</th><th>Mobile</th><th>Dhakhtar</th></tr></thead>
-                    <tbody id="historyBody"></tbody>
-                </table>
-            </div>
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2>CAREQUEUE LOGIN</h2>
+            <input type="email" id="loginEmail" placeholder="Email-ka Isbitaalka">
+            <input type="password" id="loginPass" placeholder="Password-ka">
+            <button class="btn" onclick="handleLogin()">GALO NIDAAMKA</button>
         </div>
     </div>
 
-    <div id="doctor-section" class="content-section">
-        <div class="card">
-            <h3>Bukaanka Hadda Sugaya</h3>
-            <p>Magaca: <span id="doc-pName">-</span></p>
-            <p>Tikidh: <span id="doc-pNum">-</span></p>
-            <button class="btn" onclick="finishPatient()" style="background:var(--red)">Bukaanka Wuu Dhamaaday</button>
+    <div id="admin-content" style="padding: 10px;">
+        <div class="sidebar-nav">
+            <a href="index.html">🏠 Dashboard</a>
+            <a href="reception.html" class="active">✍️ Reception</a>
+            <a href="doctor.html">👨‍⚕️ Dhakhtarka</a>
+            <a href="pharmacy.html">💊 Farmashiyaha</a>
+            <a href="lab.html">🔬 Shaybaarka</a>
+            <a href="reports.html">📊 Warbixinta</a>
+            <button onclick="firebase.auth().signOut()" style="background:var(--red); border:none; color:white; padding:5px 10px; border-radius:4px; cursor:pointer;">Logout</button>
+        </div>
+
+        <h2>CAREQUEUE RECEPTION CONTROL</h2>
+
+        <div class="grid" id="mainGrid">
+            <div class="card">
+                <h3>Diiwaangelinta Cusub</h3>
+                <input type="text" id="pName" placeholder="Magaca Bukaanka">
+                <input type="text" id="pNum" placeholder="Lambar Tikidh">
+                <input type="text" id="dName" placeholder="Magaca Dhakhtarka">
+                <input type="number" id="pRoom" placeholder="Qolka Dhakhtarka">
+                
+                <label style="color: var(--gold); font-size: 13px;">Lacagta laga rabo ($):</label>
+                <input type="number" id="pFee" placeholder="Tusaale: 15" value="10">
+
+                <select id="pPriority">
+                    <option value="Caadi">Caadi</option>
+                    <option value="Deg-deg">Deg-deg</option>
+                </select>
+                <button class="btn" onclick="sendToTV()">U DIR TV-GA & KEYDI</button>
+            </div>
+
+            <div class="card">
+                <h3>Bukaanadii Hore (<span id="qCount">0</span>)</h3>
+                <input type="text" id="search" class="search-box" onkeyup="searchTable()" placeholder="Raadi Magaca ama Tikidha...">
+                <div style="max-height: 450px; overflow-y: auto;">
+                    <table>
+                        <thead>
+                            <tr><th>Tikidh</th><th>Bukaanka</th><th>Dhakhtarka</th><th>Waqtiga</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="historyBody"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         const firebaseConfig = { 
             apiKey: "AIzaSyB5LuhewiHycIpkMWq-3HUW8yRlsSy4fLA",
+            authDomain: "carequeue-manager.firebaseapp.com",
             databaseURL: "https://carequeue-manager-default-rtdb.firebaseio.com",
-            projectId: "carequeue-manager"
+            projectId: "carequeue-manager",
+            storageBucket: "carequeue-manager.appspot.com",
+            messagingSenderId: "328741466836",
+            appId: "1:328741466836:web:d073eb2a501944e6fa8141"
         };
+        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        const auth = firebase.auth();
 
-        function showSection(id, element) {
-            document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
-            document.getElementById(id).style.display = 'block';
-            document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-            element.classList.add('active');
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+            auth.signInWithEmailAndPassword(email, pass).catch(err => alert("Khalad: " + err.message));
         }
 
-        function sendToTV() {
-            const name = document.getElementById('pName').value, num = document.getElementById('pNum').value;
-            const phone = document.getElementById('pPhone').value, room = document.getElementById('pRoom').value;
-            const doc = document.getElementById('dName').value;
-            
-            db.ref('live_queue').set({ name, num, room, doctor: doc });
-            db.ref('patient_history').push({ name, num, phone, room, doctor: doc, time: new Date().toLocaleTimeString() });
-            alert("Waa la keydiyay!");
-        }
-
-        // Dhakhtarka Real-time Update
-        db.ref('live_queue').on('value', (snap) => {
-            const p = snap.val();
-            if(p) {
-                document.getElementById('doc-pName').innerText = p.name;
-                document.getElementById('doc-pNum').innerText = p.num;
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('mainGrid').style.display = 'grid';
+                loadHistory(); 
             } else {
-                document.getElementById('doc-pName').innerText = "-";
+                document.getElementById('login-overlay').style.display = 'flex';
+                document.getElementById('mainGrid').style.display = 'none';
             }
         });
 
-        function finishPatient() { db.ref('live_queue').remove(); }
+        function sendToTV() {
+            const name = document.getElementById('pName').value;
+            const num = document.getElementById('pNum').value;
+            const room = document.getElementById('pRoom').value;
+            const doc = document.getElementById('dName').value;
+            const fee = document.getElementById('pFee').value; // Lacagta laga qaaday
+            const date = new Date().toISOString().split('T')[0]; // Taariikhda Maanta (YYYY-MM-DD)
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-        // Loading History
-        db.ref('patient_history').on('value', (snap) => {
-            const tbody = document.getElementById('historyBody');
-            tbody.innerHTML = "";
-            snap.forEach((child) => {
-                const item = child.val();
-                tbody.insertAdjacentHTML('afterbegin', `<tr><td>${item.num}</td><td>${item.name}</td><td>${item.phone}</td><td>${item.doctor}</td></tr>`);
+            if(name && num && room && doc && fee) {
+                // 1. U dir Safka TV-ga
+                db.ref('live_queue').set({ name, num, room, doctor: doc });
+                
+                // 2. Keydi Taariikhda Bukaanka
+                db.ref('patient_history').push({ name, num, room, doctor: doc, time, fee: parseFloat(fee), date: date });
+                
+                // 3. Keydi Lacagta (Transactions) ee Dashboard-ka iyo Warbixinta
+                db.ref('transactions').push({
+                    patientName: name,
+                    amount: parseFloat(fee),
+                    date: date,
+                    time: time,
+                    doctor: doc
+                });
+
+                // CODKA (Voice Alert)
+                let msg = new SpeechSynthesisUtterance("Bukaanka " + name + ", Lambar " + num + ", fadlan u gudub qolka " + room);
+                window.speechSynthesis.speak(msg);
+
+                alert("Waa la keydiyay, lacagtana waa la diiwaangeliyey!");
+                document.getElementById('pName').value = ""; document.getElementById('pNum').value = "";
+            } else { alert("Fadlan buuxi dhammaan meelaha bannaan, gaar ahaan lacagta!"); }
+        }
+
+        function loadHistory() {
+            db.ref('patient_history').on('value', (snap) => {
+                const tbody = document.getElementById('historyBody');
+                document.getElementById('qCount').innerText = snap.numChildren();
+                tbody.innerHTML = "";
+                snap.forEach((child) => {
+                    const item = child.val();
+                    tbody.insertAdjacentHTML('afterbegin', `<tr>
+                        <td><b>${item.num}</b></td>
+                        <td>${item.name}</td>
+                        <td>${item.doctor}</td>
+                        <td>${item.time}</td>
+                        <td><button onclick="deleteItem('${child.key}')" style="background:var(--red); color:white; border:none; padding:4px; cursor:pointer; border-radius:3px;">Tirtir</button></td>
+                    </tr>`);
+                });
             });
-        });
+        }
+
+        function deleteItem(id) { if(confirm("Ma hubtaa inaad tirtirto?")) db.ref('patient_history').child(id).remove(); }
+
+        function searchTable() {
+            let input = document.getElementById("search").value.toUpperCase();
+            let tr = document.getElementById("historyBody").getElementsByTagName("tr");
+            for (let i = 0; i < tr.length; i++) {
+                tr[i].style.display = tr[i].innerText.toUpperCase().indexOf(input) > -1 ? "" : "none";
+            }
+        }
     </script>
 </body>
 </html>
