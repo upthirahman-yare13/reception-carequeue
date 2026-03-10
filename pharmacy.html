@@ -1,0 +1,14 @@
+<div class="card">
+    <h3>Bukaanka Sugaya Daawo</h3>
+    <ul id="pharm-list"></ul>
+</div>
+
+<script>
+    db.ref('pharmacy_queue').on('value', (snap) => {
+        const list = document.getElementById('pharm-list');
+        list.innerHTML = "";
+        snap.forEach(child => {
+            list.insertAdjacentHTML('beforeend', `<li>${child.val().name}</li>`);
+        });
+    });
+</script>
