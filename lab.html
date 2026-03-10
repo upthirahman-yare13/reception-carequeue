@@ -1,14 +1,12 @@
+<link rel="stylesheet" href="style.css">
+<script src="app.js"></script>
 <div class="card">
-    <h3>Bukaanka Sugaya Baadhitaan</h3>
-    <ul id="lab-list"></ul>
+    <h3>🔬 Shaybaarka</h3>
+    <table id="list"></table>
 </div>
-
 <script>
-    db.ref('lab_queue').on('value', (snap) => {
-        const list = document.getElementById('lab-list');
-        list.innerHTML = "";
-        snap.forEach(child => {
-            list.insertAdjacentHTML('beforeend', `<li>${child.val().name}</li>`);
-        });
+    db.ref('lab_queue').on('value', s => {
+        let list = document.getElementById('list'); list.innerHTML = "";
+        s.forEach(c => list.insertAdjacentHTML('beforeend', `<tr><td>${c.val().name}</td><td><button onclick="db.ref('lab_queue/${c.key}').remove()">Done</button></td></tr>`));
     });
 </script>
