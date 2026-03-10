@@ -9,27 +9,30 @@
 
     <style>
         :root { --blue: #2563eb; --gold: #fbbf24; --dark: #0f172a; --card: #1e293b; --red: #ef4444; --green: #10b981; }
-        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; margin: 0; }
         
-        /* Login Style */
+        /* Login Overlay */
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); display: flex; align-items: center; justify-content: center; z-index: 1000; }
         .login-box { background: var(--card); padding: 40px; border-radius: 12px; width: 350px; text-align: center; border: 1px solid var(--blue); }
         
-        /* Main App Style */
-        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; display: none; } 
-        .card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        h2 { color: var(--gold); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
-        h3 { border-bottom: 1px solid var(--blue); padding-bottom: 10px; margin-bottom: 15px; }
-        label { font-size: 12px; color: #94a3b8; margin-top: 5px; display: block; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
-        .btn { background: var(--blue); color: white; padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 10px; transition: 0.3s; }
-        .btn:hover { background: #1d4ed8; transform: translateY(-2px); }
-        .logout-btn { background: var(--red); padding: 8px 15px; float: right; cursor: pointer; border: none; color: white; border-radius: 5px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e293b; border-radius: 8px; overflow: hidden; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #334155; font-size: 14px; }
-        th { background: #1e293b; color: var(--gold); }
+        /* Main Layout */
+        .sidebar-nav { background: var(--card); padding: 10px; margin-bottom: 20px; border-radius: 8px; display: flex; gap: 10px; justify-content: center; }
+        .sidebar-nav a { color: white; text-decoration: none; padding: 8px 15px; border-radius: 5px; background: #334155; font-size: 14px; }
+        .sidebar-nav a.active { background: var(--blue); }
 
-        /* Mobile View */
+        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; display: none; } 
+        .card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; }
+        h2 { color: var(--gold); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
+        
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
+        .btn { background: var(--blue); color: white; padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; transition: 0.3s; }
+        .btn:hover { background: #1d4ed8; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
+        th { color: var(--gold); }
+        .search-box { margin-bottom: 15px; border: 2px solid var(--blue); }
+
         @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -44,17 +47,22 @@
         </div>
     </div>
 
-    <div id="admin-content">
-        <button class="logout-btn" onclick="firebase.auth().signOut()">Logout</button>
+    <div id="admin-content" style="padding: 10px;">
+        <div class="sidebar-nav">
+            <a href="index.html">🏠 Dashboard</a>
+            <a href="reception.html" class="active">✍️ Reception</a>
+            <a href="doctor.html">👨‍⚕️ Dhakhtarka</a>
+            <a href="pharmacy.html">💊 Farmashiyaha</a>
+            <button onclick="firebase.auth().signOut()" style="background:var(--red); border:none; color:white; padding:5px 10px; border-radius:4px; cursor:pointer;">Logout</button>
+        </div>
+
         <h2>CAREQUEUE RECEPTION CONTROL</h2>
+
         <div class="grid" id="mainGrid">
             <div class="card">
                 <h3>Diiwaangelinta Cusub</h3>
-                <label>Macluumaadka Bukaanka</label>
                 <input type="text" id="pName" placeholder="Magaca Bukaanka">
                 <input type="text" id="pNum" placeholder="Lambar Tikidh">
-                <input type="tel" id="pPhone" placeholder="Mobile Bukaanka">
-                <label>Macluumaadka Dhakhtarka</label>
                 <input type="text" id="dName" placeholder="Magaca Dhakhtarka">
                 <input type="number" id="pRoom" placeholder="Qolka Dhakhtarka">
                 <select id="pPriority">
@@ -65,9 +73,9 @@
             </div>
 
             <div class="card">
-                <h3>Bukaanadii Hore (Tirada: <span id="qCount" style="color:var(--gold)">0</span>)</h3>
-                <input type="text" id="search" class="search-box" onkeyup="searchTable()" placeholder="Raadi Magaca ama Lambarka Tikidha...">
-                <div style="max-height: 500px; overflow-y: auto;">
+                <h3>Bukaanadii Hore (<span id="qCount">0</span>)</h3>
+                <input type="text" id="search" class="search-box" onkeyup="searchTable()" placeholder="Raadi Magaca ama Tikidha...">
+                <div style="max-height: 450px; overflow-y: auto;">
                     <table>
                         <thead>
                             <tr><th>Tikidh</th><th>Bukaanka</th><th>Dhakhtarka</th><th>Waqtiga</th><th>Action</th></tr>
@@ -80,6 +88,7 @@
     </div>
 
     <script>
+        // HALKAN KU DHEX BEDEL XOGTAADA FIREBASE (API KEY IWM)
         const firebaseConfig = { 
             apiKey: "AIzaSyB5LuhewiHycIpkMWq-3HUW8yRlsSy4fLA",
             authDomain: "carequeue-manager.firebaseapp.com",
@@ -94,10 +103,10 @@
         const db = firebase.database();
         const auth = firebase.auth();
 
+        // Login Logic
         function handleLogin() {
-            const email = document.getElementById('loginEmail').value.trim();
-            const pass = document.getElementById('loginPass').value.trim();
-            if(!email || !pass) { alert("Fadlan buuxi email-ka iyo password-ka"); return; }
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
             auth.signInWithEmailAndPassword(email, pass).catch(err => alert("Khalad: " + err.message));
         }
 
@@ -112,57 +121,51 @@
             }
         });
 
+        // Save and Voice Logic
         function sendToTV() {
             const name = document.getElementById('pName').value;
             const num = document.getElementById('pNum').value;
             const room = document.getElementById('pRoom').value;
-            const docInput = document.getElementById('dName').value;
+            const doc = document.getElementById('dName').value;
             const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-            if(name && num && room && docInput) {
-                const finalDoc = docInput.toLowerCase().startsWith("dr.") ? docInput : "Dr. " + docInput;
+            if(name && num && room && doc) {
+                db.ref('live_queue').set({ name, num, room, doctor: doc });
+                db.ref('patient_history').push({ name, num, room, doctor: doc, time });
                 
-                db.ref('live_queue').set({ name, num, room, doctor: finalDoc });
-                db.ref('patient_history').push({ name, num, room, doctor: finalDoc, time });
-                
-                // CODKA OO WATA LAMBARKA (Voice Alert)
-                let msg = new SpeechSynthesisUtterance("Bukaanka " + name + ", Lambar " + num + ", fadlan u gudub " + finalDoc + ", qolka " + room);
+                // CODKA (Voice Alert)
+                let msg = new SpeechSynthesisUtterance("Bukaanka " + name + ", Lambar " + num + ", fadlan u gudub qolka " + room);
                 window.speechSynthesis.speak(msg);
 
-                document.getElementById('pName').value = "";
-                document.getElementById('pNum').value = "";
-                document.getElementById('pPhone').value = "";
                 alert("Waa la diray!");
-            } else {
-                alert("Fadlan buuxi dhammaan meelaha bannaan!");
-            }
+                document.getElementById('pName').value = ""; document.getElementById('pNum').value = "";
+            } else { alert("Fadlan buuxi meelaha bannaan!"); }
         }
 
         function loadHistory() {
-            db.ref('patient_history').on('value', (snapshot) => {
+            db.ref('patient_history').on('value', (snap) => {
                 const tbody = document.getElementById('historyBody');
-                document.getElementById('qCount').innerText = snapshot.numChildren();
+                document.getElementById('qCount').innerText = snap.numChildren();
                 tbody.innerHTML = "";
-                snapshot.forEach((child) => {
+                snap.forEach((child) => {
                     const item = child.val();
                     tbody.insertAdjacentHTML('afterbegin', `<tr>
                         <td><b>${item.num}</b></td>
                         <td>${item.name}</td>
                         <td>${item.doctor}</td>
                         <td>${item.time}</td>
-                        <td><button style="background:var(--red); color:white; border:none; padding:5px; cursor:pointer; border-radius:3px;" onclick="deleteItem('${child.key}')">Tirtir</button></td>
+                        <td><button onclick="deleteItem('${child.key}')" style="background:var(--red); color:white; border:none; padding:4px; cursor:pointer;">Tirtir</button></td>
                     </tr>`);
                 });
             });
         }
 
-        function deleteItem(id) { if(confirm("Ma hubtaa inaad tirtirto?")) db.ref('patient_history').child(id).remove(); }
+        function deleteItem(id) { if(confirm("Ma hubtaa?")) db.ref('patient_history').child(id).remove(); }
 
         function searchTable() {
             let input = document.getElementById("search").value.toUpperCase();
             let tr = document.getElementById("historyBody").getElementsByTagName("tr");
             for (let i = 0; i < tr.length; i++) {
-                // Halkan waxay raadinaysaa qoraal kasta oo ku jira safka (Table Row)
                 tr[i].style.display = tr[i].innerText.toUpperCase().indexOf(input) > -1 ? "" : "none";
             }
         }
