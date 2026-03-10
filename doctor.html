@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="so">
+<head>
+    <meta charset="UTF-8">
+    <title>CareQueue | Doctor</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { background: #0f172a; color: white; font-family: sans-serif; padding: 20px; }
+        .card { background: #1e293b; padding: 20px; border-radius: 10px; border: 1px solid #fbbf24; }
+        h1 { color: #fbbf24; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Bukaanka Hadda Sugaya</h1>
+        <div id="patient-info">
+            <p>Magaca: <span id="pName">-</span></p>
+            <p>Tikidh: <span id="pNum">-</span></p>
+            <p>Qolka: <span id="pRoom">-</span></p>
+        </div>
+        <button onclick="finishPatient()" style="background:#10b981; color:white; padding:10px; border:none; cursor:pointer;">Bukaanka wuu dhamaaday</button>
+    </div>
+
+    <script>
+        // Isku xirka Firebase
+        const firebaseConfig = { /* KU DAREY XOGTAADA HORE */ };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Akhrinta xogta live_queue
+        db.ref('live_queue').on('value', (snap) => {
+            const p = snap.val();
+            if(p) {
+                document.getElementById('pName').innerText = p.name;
+                document.getElementById('pNum').innerText = p.num;
+                document.getElementById('pRoom').innerText = p.room;
+            } else {
+                document.getElementById('pName').innerText = "Ma jiro bukaan hadda sugaya";
+            }
+        });
+
+        function finishPatient() {
+            db.ref('live_queue').remove(); // Bukaanka ka saar safka
+            alert("Bukaanka waa la dhammaystiray");
+        }
+    </script>
+</body>
+</html>
