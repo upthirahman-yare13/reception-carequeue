@@ -111,54 +111,32 @@
             if(name && num && complaint) {
                 const dateKey = new Date().toLocaleDateString().replace(/\//g, '-');
 
-                // 1. U dir Dhakhtarka
+                // 1. U dir Dhakhtarka & TV-ga (live_queue) - Waxaan ka dhigay push si dhowr qof ay ugu jiraan
                 db.ref('live_queue').push({ name, num, room, doctor: doc, complaint, phone });
                 
-                // 2. LIVE TV SCREEN UPDATE
-                db.ref('tv_screen').set({
-                    name: name,
-                    ticket: num,
-                    room: room,
-                    doctor: doc,
-                    timestamp: Date.now()
-                });
-                
-                // 3. Keydi History & Revenue
+                // 2. Keydi History-ga
                 db.ref('patient_history').push({ 
                     name, num, phone, complaint, room, doctor: doc, fee,
                     date: new Date().toLocaleDateString(), 
                     time: new Date().toLocaleTimeString() 
                 });
+                
+                // 3. Dakhliga Maanta (daily_revenue) si Admin-ku u arko
                 db.ref('daily_revenue/' + dateKey).push({ name, amount: fee, time: new Date().toLocaleTimeString() });
 
-                // Beep Sound
+                // Codka garaaca
                 successSound.play();
 
-                // CODKA AFKA (3 TIMES LOOP)
-                // Waxaan u dhisnay jumladda English fudud
-                const textToSpeak = `Attention please. Patient ${name}. Ticket number ${num}. Please proceed to room ${room} for Doctor ${doc}.`;
+                // Codka afka (Speech) - Tartiib & Fasiix
+                const msg = new SpeechSynthesisUtterance("Bukaan cusub ayaa yimid: " + name);
+                msg.rate = 0.8; // Tartiib ka dhig
+                msg.pitch = 1;  
+                window.speechSynthesis.speak(msg);
                 
-                let count = 0;
-                const speakInterval = setInterval(() => {
-                    const msg = new SpeechSynthesisUtterance(textToSpeak);
-                    const voices = window.speechSynthesis.getVoices();
-                    
-                    // Dooro cod nin ah (English US Male)
-                    msg.voice = voices.find(v => v.name.includes('Male') || v.name.includes('Google US English')) || voices[0];
-                    msg.rate = 0.8; // Tartiib fasiix ah
-                    msg.pitch = 0.9; // Cod deggen oo nin ah
-                    msg.lang = 'en-US';
-                    
-                    window.speechSynthesis.speak(msg);
-                    count++;
-                    
-                    if (count >= 3) clearInterval(speakInterval);
-                }, 5500); // 5.5 ilbiriqsi halkan u dhaxaysa ogeysiisyada
-                
-                alert("Waa la diray bukaankii! TV-ga waa lagu xiray.");
+                alert("Waa la diray bukaankii! Dakhligana waa la keydiyey.");
                 document.getElementById('pName').value = ""; 
-                document.getElementById('pNum').value = "";
                 document.getElementById('pComplaint').value = "";
+                document.getElementById('pNum').value = "";
             } else { alert("Fadlan buuxi meelaha muhiimka ah!"); }
         }
 
@@ -169,7 +147,7 @@
                 tbody.innerHTML = "";
                 snap.forEach((child) => {
                     const item = child.val();
-                    tbody.insertAdjacentHTML('afterbegin', `<tr><td>${item.num}</td><td>${item.name}</td><td>${item.complaint.substring(0, 20)}...</td><td>${item.doctor}</td><td><button onclick="db.ref('patient_history').child('${child.key}').remove()" style="background:var(--red); color:white; border:none; padding:4px; cursor:pointer;">Tirtir</button></td></tr>`);
+                    tbody.insertAdjacentHTML('afterbegin', `<tr><td>${item.num}</td><td>${item.name}</td><td>${item.complaint}</td><td>${item.doctor}</td><td><button onclick="db.ref('patient_history').child('${child.key}').remove()" style="background:var(--red); color:white; border:none; padding:4px; cursor:pointer;">Tirtir</button></td></tr>`);
                 });
             });
         }
@@ -179,7 +157,9 @@
             let rows = document.getElementById('historyBody').getElementsByTagName('tr');
             for (let i = 0; i < rows.length; i++) {
                 let name = rows[i].getElementsByTagName('td')[1].innerText.toLowerCase();
-                rows[i].style.display = name.includes(input) ? "" : "none";
+                let ticket = rows[i].getElementsByTagName('td')[0].innerText.toLowerCase();
+                // Waxaad ku raadin kartaa Magaca ama Lambarka Tikidha
+                rows[i].style.display = (name.includes(input) || ticket.includes(input)) ? "" : "none";
             }
         }
     </script>
