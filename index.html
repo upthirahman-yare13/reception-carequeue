@@ -108,47 +108,36 @@
                   doc = document.getElementById('dName').value, 
                   fee = parseFloat(document.getElementById('pFee').value);
 
-            if(name && num && room) {
+            if(name && num && complaint) {
                 const dateKey = new Date().toLocaleDateString().replace(/\//g, '-');
 
-                // --- ISKU XIRKA TV-GA ---
-                // Waxaan u isticmaalaynaa .set() si TV-ga uu hadda u muujiyo qofkan cusub
-                db.ref('live_queue').set({ 
-                    name: name, 
-                    num: num, 
-                    room: room, 
-                    doctor: doc, 
-                    complaint: complaint, 
-                    phone: phone 
-                });
+                // 1. U dir Dhakhtarka & TV-ga (live_queue) - Waxaan ka dhigay push si dhowr qof ay ugu jiraan
+                db.ref('live_queue').push({ name, num, room, doctor: doc, complaint, phone });
                 
-                // --- KEYDINTA HISTORY-GA ---
+                // 2. Keydi History-ga
                 db.ref('patient_history').push({ 
                     name, num, phone, complaint, room, doctor: doc, fee,
                     date: new Date().toLocaleDateString(), 
                     time: new Date().toLocaleTimeString() 
                 });
                 
-                // --- DAKHLIGA ---
+                // 3. Dakhliga Maanta (daily_revenue) si Admin-ku u arko
                 db.ref('daily_revenue/' + dateKey).push({ name, amount: fee, time: new Date().toLocaleTimeString() });
 
                 // Codka garaaca
                 successSound.play();
 
-                // Codka afka (Speech)
-                const msg = new SpeechSynthesisUtterance("Bukaan cusub: " + name);
-                msg.rate = 0.8; 
+                // Codka afka (Speech) - Tartiib & Fasiix
+                const msg = new SpeechSynthesisUtterance("Bukaan cusub ayaa yimid: " + name);
+                msg.rate = 0.8; // Tartiib ka dhig
+                msg.pitch = 1;  
                 window.speechSynthesis.speak(msg);
                 
-                alert("Waa la diray bukaankii! TV-ga hadda waa laga arkayaa.");
-                
-                // Nadiifi foomka
+                alert("Waa la diray bukaankii! Dakhligana waa la keydiyey.");
                 document.getElementById('pName').value = ""; 
                 document.getElementById('pComplaint').value = "";
                 document.getElementById('pNum').value = "";
-            } else { 
-                alert("Fadlan buuxi Magaca, Tikidhka iyo Qolka!"); 
-            }
+            } else { alert("Fadlan buuxi meelaha muhiimka ah!"); }
         }
 
         function loadHistory() {
@@ -169,6 +158,7 @@
             for (let i = 0; i < rows.length; i++) {
                 let name = rows[i].getElementsByTagName('td')[1].innerText.toLowerCase();
                 let ticket = rows[i].getElementsByTagName('td')[0].innerText.toLowerCase();
+                // Waxaad ku raadin kartaa Magaca ama Lambarka Tikidha
                 rows[i].style.display = (name.includes(input) || ticket.includes(input)) ? "" : "none";
             }
         }
