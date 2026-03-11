@@ -81,6 +81,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const auth = firebase.auth();
+        const successSound = new Audio('https://actions.google.com/sounds/v1/ui/positive_digital_beep.ogg');
 
         function handleLogin() {
             auth.signInWithEmailAndPassword(document.getElementById('loginEmail').value, document.getElementById('loginPass').value)
@@ -108,16 +109,23 @@
                   fee = parseFloat(document.getElementById('pFee').value);
 
             if(name && num && complaint) {
-                // 1. U dir Dhakhtarka (Live Queue wuxuu hadda wataa cabashada bukaanka)
-                db.ref('live_queue').set({ name, num, room, doctor: doc, complaint });
+                db.ref('live_queue').set({ name, num, room, doctor: doc, complaint, phone });
                 
-                // 2. Keydi Taariikhda
-                db.ref('patient_history').push({ name, num, phone, complaint, room, doctor: doc, time: new Date().toLocaleTimeString() });
+                db.ref('patient_history').push({ 
+                    name, num, phone, complaint, room, doctor: doc, fee,
+                    date: new Date().toLocaleDateString(), 
+                    time: new Date().toLocaleTimeString() 
+                });
                 
-                // 3. Keydi Dakhliga
                 db.ref('transactions').push({ name, amount: fee, date: new Date().toLocaleDateString(), doctor: doc });
                 
-                alert("Waa la diray bukaankii iyo xogtiisii!");
+                // Codka garaaca
+                successSound.play();
+                // Codka afka (Speech)
+                const msg = new SpeechSynthesisUtterance("Bukaan cusub ayaa yimid: " + name);
+                window.speechSynthesis.speak(msg);
+                
+                alert("Waa la diray bukaankii!");
                 document.getElementById('pName').value = ""; document.getElementById('pComplaint').value = "";
             } else { alert("Fadlan buuxi meelaha muhiimka ah!"); }
         }
@@ -134,7 +142,14 @@
             });
         }
         
-        // ... (function searchTable() waa sidii hore)
+        function searchTable() {
+            let input = document.getElementById('search').value.toLowerCase();
+            let rows = document.getElementById('historyBody').getElementsByTagName('tr');
+            for (let i = 0; i < rows.length; i++) {
+                let name = rows[i].getElementsByTagName('td')[1].innerText.toLowerCase();
+                rows[i].style.display = name.includes(input) ? "" : "none";
+            }
+        }
     </script>
 </body>
 </html>
