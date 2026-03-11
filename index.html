@@ -111,42 +111,54 @@
             if(name && num && complaint) {
                 const dateKey = new Date().toLocaleDateString().replace(/\//g, '-');
 
-                // 1. U dir Dhakhtarka (live_queue)
+                // 1. U dir Dhakhtarka
                 db.ref('live_queue').push({ name, num, room, doctor: doc, complaint, phone });
                 
-                // 2. U DIR TV-GA (Meeshan ayuu kugu xirayaa Live Screen-ka)
-                db.ref('tv_screen').set({ 
-                    currentPatient: name, 
-                    ticketNumber: num, 
-                    roomNumber: room,
-                    timestamp: Date.now() 
+                // 2. LIVE TV SCREEN UPDATE
+                db.ref('tv_screen').set({
+                    name: name,
+                    ticket: num,
+                    room: room,
+                    doctor: doc,
+                    timestamp: Date.now()
                 });
                 
-                // 3. Keydi History-ga
+                // 3. Keydi History & Revenue
                 db.ref('patient_history').push({ 
                     name, num, phone, complaint, room, doctor: doc, fee,
                     date: new Date().toLocaleDateString(), 
                     time: new Date().toLocaleTimeString() 
                 });
-                
-                // 4. Dakhliga Maanta
                 db.ref('daily_revenue/' + dateKey).push({ name, amount: fee, time: new Date().toLocaleTimeString() });
 
-                // Codka Beep-ka
+                // Beep Sound
                 successSound.play();
 
-                // CODKA AFKA (Speech English Fasiix ah)
-                const speech = new SpeechSynthesisUtterance();
-                speech.text = "New patient, " + name + ". Please proceed to room " + room;
-                speech.lang = 'en-US'; // English Fasiix ah
-                speech.rate = 0.8;    // Tartiib la fahmi karo
-                speech.pitch = 1;     // Cod dabiici ah
-                window.speechSynthesis.speak(speech);
+                // CODKA AFKA (3 TIMES LOOP)
+                // Waxaan u dhisnay jumladda English fudud
+                const textToSpeak = `Attention please. Patient ${name}. Ticket number ${num}. Please proceed to room ${room} for Doctor ${doc}.`;
                 
-                alert("Waa la diray bukaankii! Live TV-ga waa lagu xiray.");
+                let count = 0;
+                const speakInterval = setInterval(() => {
+                    const msg = new SpeechSynthesisUtterance(textToSpeak);
+                    const voices = window.speechSynthesis.getVoices();
+                    
+                    // Dooro cod nin ah (English US Male)
+                    msg.voice = voices.find(v => v.name.includes('Male') || v.name.includes('Google US English')) || voices[0];
+                    msg.rate = 0.8; // Tartiib fasiix ah
+                    msg.pitch = 0.9; // Cod deggen oo nin ah
+                    msg.lang = 'en-US';
+                    
+                    window.speechSynthesis.speak(msg);
+                    count++;
+                    
+                    if (count >= 3) clearInterval(speakInterval);
+                }, 5500); // 5.5 ilbiriqsi halkan u dhaxaysa ogeysiisyada
+                
+                alert("Waa la diray bukaankii! TV-ga waa lagu xiray.");
                 document.getElementById('pName').value = ""; 
-                document.getElementById('pComplaint').value = "";
                 document.getElementById('pNum').value = "";
+                document.getElementById('pComplaint').value = "";
             } else { alert("Fadlan buuxi meelaha muhiimka ah!"); }
         }
 
@@ -157,7 +169,7 @@
                 tbody.innerHTML = "";
                 snap.forEach((child) => {
                     const item = child.val();
-                    tbody.insertAdjacentHTML('afterbegin', `<tr><td>${item.num}</td><td>${item.name}</td><td>${item.complaint}</td><td>${item.doctor}</td><td><button onclick="db.ref('patient_history').child('${child.key}').remove()" style="background:var(--red); color:white; border:none; padding:4px; cursor:pointer;">Tirtir</button></td></tr>`);
+                    tbody.insertAdjacentHTML('afterbegin', `<tr><td>${item.num}</td><td>${item.name}</td><td>${item.complaint.substring(0, 20)}...</td><td>${item.doctor}</td><td><button onclick="db.ref('patient_history').child('${child.key}').remove()" style="background:var(--red); color:white; border:none; padding:4px; cursor:pointer;">Tirtir</button></td></tr>`);
                 });
             });
         }
@@ -167,8 +179,7 @@
             let rows = document.getElementById('historyBody').getElementsByTagName('tr');
             for (let i = 0; i < rows.length; i++) {
                 let name = rows[i].getElementsByTagName('td')[1].innerText.toLowerCase();
-                let ticket = rows[i].getElementsByTagName('td')[0].innerText.toLowerCase();
-                rows[i].style.display = (name.includes(input) || ticket.includes(input)) ? "" : "none";
+                rows[i].style.display = name.includes(input) ? "" : "none";
             }
         }
     </script>
