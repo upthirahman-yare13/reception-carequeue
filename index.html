@@ -99,7 +99,7 @@
             }
         });
 
-        function sendToTV() {
+function sendToTV() {
             const name = document.getElementById('pName').value, 
                   num = document.getElementById('pNum').value, 
                   phone = document.getElementById('pPhone').value, 
@@ -108,20 +108,13 @@
                   doc = document.getElementById('dName').value, 
                   fee = parseFloat(document.getElementById('pFee').value);
 
-            if(name && num && complaint) {
+            if(name && num && complaint && room) { // Waxaan ku daray room
                 const dateKey = new Date().toLocaleDateString().replace(/\//g, '-');
 
-                // 1. U dir TV-ga (live_queue) - Halkan waa inaan u isticmaalnaa .set() si TV-ga u arko qofkan kaliya
-                db.ref('live_queue').set({ 
-                    name: name, 
-                    num: num, 
-                    room: room, 
-                    doctor: doc, 
-                    complaint: complaint, 
-                    phone: phone 
-                });
+                // 1. U dir TV-ga (live_queue) - .set() waa kan TV-ga u sheegaya inuu qofkan cusub soo bandhigo
+                db.ref('live_queue').set({ name, num, room, doctor: doc, complaint, phone });
                 
-                // 2. Keydi History-ga - Halkan .push() waa sax
+                // 2. Keydi History-ga
                 db.ref('patient_history').push({ 
                     name, num, phone, complaint, room, doctor: doc, fee,
                     date: new Date().toLocaleDateString(), 
@@ -131,21 +124,14 @@
                 // 3. Dakhliga Maanta
                 db.ref('daily_revenue/' + dateKey).push({ name, amount: fee, time: new Date().toLocaleTimeString() });
 
-                // Codka garaaca
                 successSound.play();
-
-                // Codka afka (Speech)
-                const msg = new SpeechSynthesisUtterance("Bukaan cusub ayaa yimid: " + name);
-                msg.rate = 0.8; 
-                window.speechSynthesis.speak(msg);
                 
-                alert("Waa la diray bukaankii! TV-ga waa laga arki karaa hadda.");
+                alert("Waa la diray bukaankii! TV-ga hadda waa laga arkayaa.");
                 document.getElementById('pName').value = ""; 
                 document.getElementById('pComplaint').value = "";
                 document.getElementById('pNum').value = "";
-            } else { alert("Fadlan buuxi meelaha muhiimka ah!"); }
-        }
-
+            } else { alert("Fadlan buuxi meelaha muhiimka ah (Magaca, Tikidhka, Qolka iyo Cabashada)!"); }
+            }
         function loadHistory() {
             db.ref('patient_history').on('value', (snap) => {
                 const tbody = document.getElementById('historyBody');
