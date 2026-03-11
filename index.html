@@ -5,114 +5,163 @@
     <title>CareQueue | Reception</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
     <style>
-        body { background-color: #f1f5f9; font-family: 'Segoe UI', sans-serif; padding: 20px; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
-        h2 { color: #1e293b; text-align: center; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; }
-        .btn-reg { background: #3b82f6; color: white; border: none; padding: 15px; width: 100%; cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 16px; transition: 0.3s; }
-        .btn-reg:hover { background: #2563eb; }
-        .search-box { background: #e2e8f0; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-        #searchResult { margin-top: 5px; font-size: 14px; color: #475569; }
+        :root { --blue: #2563eb; --gold: #fbbf24; --dark: #0f172a; --card: #1e293b; --red: #ef4444; }
+        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; margin: 0; }
+        
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .login-box { background: var(--card); padding: 40px; border-radius: 12px; width: 350px; text-align: center; border: 1px solid var(--blue); }
+        
+        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; display: none; } 
+        .card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; }
+        h2 { color: var(--gold); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
+        
+        input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
+        #pFee { border: 1px solid var(--gold); color: var(--gold); font-weight: bold; }
+        .btn { background: var(--blue); color: white; padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #334155; font-size: 13px; }
+        th { color: var(--gold); }
+        .search-box { margin-bottom: 15px; border: 2px solid var(--blue); }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Diiwaangelinta Bukaanka</h2>
-
-    <div class="search-box">
-        <label>Raadi Bukaankii hore (Magaca):</label>
-        <input type="text" id="searchInput" onkeyup="searchPatient()" placeholder="Ku qor magaca halkan...">
-        <div id="searchResult"></div>
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2>RECEPTION LOGIN</h2>
+            <input type="email" id="loginEmail" placeholder="Email">
+            <input type="password" id="loginPass" placeholder="Password">
+            <button class="btn" onclick="handleLogin()">GALO</button>
+        </div>
     </div>
 
-    <hr>
+    <div id="admin-content" style="padding: 10px;">
+        <h2>CAREQUEUE RECEPTION</h2>
+        <div class="grid" id="mainGrid">
+            <div class="card">
+                <h3>Diiwaangelinta Bukaanka</h3>
+                <input type="text" id="pName" placeholder="Magaca Bukaanka">
+                <input type="text" id="pNum" placeholder="Lambar Tikidh">
+                <input type="tel" id="pPhone" placeholder="Mobile-ka Bukaanka">
+                <textarea id="pComplaint" placeholder="Cabashada Bukaanka (Xanuunka)" rows="3"></textarea>
+                <input type="text" id="dName" placeholder="Magaca Dhakhtarka">
+                <input type="number" id="pRoom" placeholder="Qolka Dhakhtarka">
+                <label style="color:var(--gold); font-size: 12px;">Lacagta ($):</label>
+                <input type="number" id="pFee" value="10">
+                <button class="btn" onclick="sendToTV()">U DIR TV-GA & KEYDI</button>
+            </div>
 
-    <input type="text" id="pName" placeholder="Magaca Bukaanka Cusub" required>
-    <input type="text" id="pComplaint" placeholder="Cabashada Bukaanka" required>
-    <select id="pFee">
-        <option value="10">Consultation ($10)</option>
-        <option value="15">Emergency ($15)</option>
-        <option value="5">Follow-up ($5)</option>
-    </select>
-    
-    <button class="btn-reg" onclick="registerAndPay()">Diiwaangeli & U dir Dhakhtarka</button>
-</div>
+            <div class="card">
+                <h3>Bukaanadii Hore (<span id="qCount">0</span>)</h3>
+                <input type="text" id="search" class="search-box" onkeyup="searchTable()" placeholder="Raadi magaca bukaanka...">
+                <div style="max-height: 450px; overflow-y: auto;">
+                    <table>
+                        <thead><tr><th>Tikidh</th><th>Bukaanka</th><th>Cabashada</th><th>Dhakhtarka</th><th>Action</th></tr></thead>
+                        <tbody id="historyBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<script>
-    // 1. Firebase Configuration
-    const firebaseConfig = { databaseURL: "https://carequeue-manager-default-rtdb.firebaseio.com" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    <script>
+        const firebaseConfig = { 
+            apiKey: "AIzaSyB5LuhewiHycIpkMWq-3HUW8yRlsSy4fLA",
+            authDomain: "carequeue-manager.firebaseapp.com",
+            databaseURL: "https://carequeue-manager-default-rtdb.firebaseio.com",
+            projectId: "carequeue-manager",
+            storageBucket: "carequeue-manager.appspot.com",
+            messagingSenderId: "328741466836",
+            appId: "1:328741466836:web:d073eb2a501944e6fa8141"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
+        const successSound = new Audio('https://actions.google.com/sounds/v1/ui/positive_digital_beep.ogg');
 
-    // 2. Shaqada Raadinta (Search Function)
-    function searchPatient() {
-        const query = document.getElementById('searchInput').value.toLowerCase();
-        const resultDiv = document.getElementById('searchResult');
-        
-        if (query.length < 2) { resultDiv.innerHTML = ""; return; }
+        function handleLogin() {
+            auth.signInWithEmailAndPassword(document.getElementById('loginEmail').value, document.getElementById('loginPass').value)
+            .catch(err => alert("Khalad: " + err.message));
+        }
 
-        db.ref('patient_history').orderByChild('name').startAt(query).endAt(query + "\uf8ff").limitToFirst(5).once('value', (snap) => {
-            const data = snap.val();
-            resultDiv.innerHTML = "";
-            if (data) {
-                for (let key in data) {
-                    resultDiv.innerHTML += `<div style="cursor:pointer; padding:5px; border-bottom:1px solid #ddd;" onclick="fillForm('${data[key].name}')">
-                        📍 ${data[key].name} </div>`;
-                }
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('mainGrid').style.display = 'grid';
+                loadHistory(); 
             } else {
-                resultDiv.innerHTML = "Bukaan hore looma helin.";
+                document.getElementById('login-overlay').style.display = 'flex';
+                document.getElementById('mainGrid').style.display = 'none';
             }
         });
-    }
 
-    function fillForm(name) {
-        document.getElementById('pName').value = name;
-        document.getElementById('searchResult').innerHTML = "";
-    }
+        function sendToTV() {
+            const name = document.getElementById('pName').value, 
+                  num = document.getElementById('pNum').value, 
+                  phone = document.getElementById('pPhone').value, 
+                  complaint = document.getElementById('pComplaint').value,
+                  room = document.getElementById('pRoom').value,
+                  doc = document.getElementById('dName').value, 
+                  fee = parseFloat(document.getElementById('pFee').value);
 
-    // 3. Diiwaangelinta, Dhakhtarka, iyo Dakhliga
-    function registerAndPay() {
-        const name = document.getElementById('pName').value;
-        const complaint = document.getElementById('pComplaint').value;
-        const fee = document.getElementById('pFee').value;
+            if(name && num && complaint) {
+                const dateKey = new Date().toLocaleDateString().replace(/\//g, '-');
 
-        if (name && complaint) {
-            const timestamp = new Date().toISOString();
-            const dateStr = new Date().toLocaleDateString().replace(/\//g, '-'); // Format: DD-MM-YYYY
+                // 1. U dir Dhakhtarka & TV-ga (live_queue) - Waxaan ka dhigay push si dhowr qof ay ugu jiraan
+                db.ref('live_queue').push({ name, num, room, doctor: doc, complaint, phone });
+                
+                // 2. Keydi History-ga
+                db.ref('patient_history').push({ 
+                    name, num, phone, complaint, room, doctor: doc, fee,
+                    date: new Date().toLocaleDateString(), 
+                    time: new Date().toLocaleTimeString() 
+                });
+                
+                // 3. Dakhliga Maanta (daily_revenue) si Admin-ku u arko
+                db.ref('daily_revenue/' + dateKey).push({ name, amount: fee, time: new Date().toLocaleTimeString() });
 
-            // A. U dir Dhakhtarka (live_queue) - Tan Doctor-ka ayaa akhrinaya
-            db.ref('live_queue').push({
-                name: name,
-                complaint: complaint,
-                status: "waiting",
-                time: new Date().toLocaleTimeString()
-            });
+                // Codka garaaca
+                successSound.play();
 
-            // B. Ku dar Dakhliga Maanta (daily_revenue) - Tan Admin-ka ayaa akhrinaya
-            db.ref('daily_revenue/' + dateStr).push({
-                patientName: name,
-                amount: parseFloat(fee),
-                time: new Date().toLocaleTimeString()
-            });
-
-            // C. Ku dar Taariikhda Guud (patient_history) - Tan Raadinta ayaa isticmaasha
-            db.ref('patient_history').push({
-                name: name.toLowerCase(),
-                lastVisit: timestamp
-            });
-
-            alert("Guul! Bukaanka waa la diiwaangeliyey, dakhligana waa la xisaabiyey.");
-            
-            // Nadiifi Form-ka
-            document.getElementById('pName').value = "";
-            document.getElementById('pComplaint').value = "";
-        } else {
-            alert("Fadlan buuxi magaca iyo cabashada!");
+                // Codka afka (Speech) - Tartiib & Fasiix
+                const msg = new SpeechSynthesisUtterance("Bukaan cusub ayaa yimid: " + name);
+                msg.rate = 0.8; // Tartiib ka dhig
+                msg.pitch = 1;  
+                window.speechSynthesis.speak(msg);
+                
+                alert("Waa la diray bukaankii! Dakhligana waa la keydiyey.");
+                document.getElementById('pName').value = ""; 
+                document.getElementById('pComplaint').value = "";
+                document.getElementById('pNum').value = "";
+            } else { alert("Fadlan buuxi meelaha muhiimka ah!"); }
         }
-    }
-</script>
 
+        function loadHistory() {
+            db.ref('patient_history').on('value', (snap) => {
+                const tbody = document.getElementById('historyBody');
+                document.getElementById('qCount').innerText = snap.numChildren();
+                tbody.innerHTML = "";
+                snap.forEach((child) => {
+                    const item = child.val();
+                    tbody.insertAdjacentHTML('afterbegin', `<tr><td>${item.num}</td><td>${item.name}</td><td>${item.complaint}</td><td>${item.doctor}</td><td><button onclick="db.ref('patient_history').child('${child.key}').remove()" style="background:var(--red); color:white; border:none; padding:4px; cursor:pointer;">Tirtir</button></td></tr>`);
+                });
+            });
+        }
+        
+        function searchTable() {
+            let input = document.getElementById('search').value.toLowerCase();
+            let rows = document.getElementById('historyBody').getElementsByTagName('tr');
+            for (let i = 0; i < rows.length; i++) {
+                let name = rows[i].getElementsByTagName('td')[1].innerText.toLowerCase();
+                let ticket = rows[i].getElementsByTagName('td')[0].innerText.toLowerCase();
+                // Waxaad ku raadin kartaa Magaca ama Lambarka Tikidha
+                rows[i].style.display = (name.includes(input) || ticket.includes(input)) ? "" : "none";
+            }
+        }
+    </script>
 </body>
 </html>
