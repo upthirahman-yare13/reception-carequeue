@@ -57,7 +57,7 @@
 
             <div class="card">
                 <h3>Bukaanadii Hore (<span id="qCount">0</span>)</h3>
-                <input type="text" id="search" class="search-box" onkeyup="searchTable()" placeholder="Raadi magaca bukaanka...">
+                <input type="text" id="search" class="search-box" onkeyup="searchTable()" placeholder="Raadi...">
                 <div style="max-height: 450px; overflow-y: auto;">
                     <table>
                         <thead><tr><th>Tikidh</th><th>Bukaanka</th><th>Cabashada</th><th>Dhakhtarka</th><th>Action</th></tr></thead>
@@ -109,34 +109,24 @@
                   fee = parseFloat(document.getElementById('pFee').value);
 
             if(name && num && complaint) {
-                const dateKey = new Date().toLocaleDateString().replace(/\//g, '-');
-
-                // 1. U dir Dhakhtarka & TV-ga (live_queue) - Waxaan ka dhigay push si dhowr qof ay ugu jiraan
-                db.ref('live_queue').push({ name, num, room, doctor: doc, complaint, phone });
+                db.ref('live_queue').set({ name, num, room, doctor: doc, complaint, phone });
                 
-                // 2. Keydi History-ga
                 db.ref('patient_history').push({ 
                     name, num, phone, complaint, room, doctor: doc, fee,
                     date: new Date().toLocaleDateString(), 
                     time: new Date().toLocaleTimeString() 
                 });
                 
-                // 3. Dakhliga Maanta (daily_revenue) si Admin-ku u arko
-                db.ref('daily_revenue/' + dateKey).push({ name, amount: fee, time: new Date().toLocaleTimeString() });
-
+                db.ref('transactions').push({ name, amount: fee, date: new Date().toLocaleDateString(), doctor: doc });
+                
                 // Codka garaaca
                 successSound.play();
-
-                // Codka afka (Speech) - Tartiib & Fasiix
+                // Codka afka (Speech)
                 const msg = new SpeechSynthesisUtterance("Bukaan cusub ayaa yimid: " + name);
-                msg.rate = 0.8; // Tartiib ka dhig
-                msg.pitch = 1;  
                 window.speechSynthesis.speak(msg);
                 
-                alert("Waa la diray bukaankii! Dakhligana waa la keydiyey.");
-                document.getElementById('pName').value = ""; 
-                document.getElementById('pComplaint').value = "";
-                document.getElementById('pNum').value = "";
+                alert("Waa la diray bukaankii!");
+                document.getElementById('pName').value = ""; document.getElementById('pComplaint').value = "";
             } else { alert("Fadlan buuxi meelaha muhiimka ah!"); }
         }
 
@@ -147,7 +137,7 @@
                 tbody.innerHTML = "";
                 snap.forEach((child) => {
                     const item = child.val();
-                    tbody.insertAdjacentHTML('afterbegin', `<tr><td>${item.num}</td><td>${item.name}</td><td>${item.complaint}</td><td>${item.doctor}</td><td><button onclick="db.ref('patient_history').child('${child.key}').remove()" style="background:var(--red); color:white; border:none; padding:4px; cursor:pointer;">Tirtir</button></td></tr>`);
+                    tbody.insertAdjacentHTML('afterbegin', `<tr><td>${item.num}</td><td>${item.name}</td><td>${item.complaint.substring(0, 20)}...</td><td>${item.doctor}</td><td><button onclick="db.ref('patient_history').child('${child.key}').remove()" style="background:var(--red); color:white; border:none; padding:4px; cursor:pointer;">Tirtir</button></td></tr>`);
                 });
             });
         }
@@ -157,9 +147,7 @@
             let rows = document.getElementById('historyBody').getElementsByTagName('tr');
             for (let i = 0; i < rows.length; i++) {
                 let name = rows[i].getElementsByTagName('td')[1].innerText.toLowerCase();
-                let ticket = rows[i].getElementsByTagName('td')[0].innerText.toLowerCase();
-                // Waxaad ku raadin kartaa Magaca ama Lambarka Tikidha
-                rows[i].style.display = (name.includes(input) || ticket.includes(input)) ? "" : "none";
+                rows[i].style.display = name.includes(input) ? "" : "none";
             }
         }
     </script>
