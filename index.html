@@ -156,3 +156,87 @@ function sendToTV() {
     </script>
 </body>
 </html>
+<style>
+    :root {
+        --primary: #6366f1;
+        --secondary: #a855f7;
+        --bg: #0f172a;
+        --glass: rgba(255, 255, 255, 0.05);
+        --border: rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+        background: radial-gradient(circle at top left, #1e1b4b, #0f172a);
+        color: #f8fafc;
+        font-family: 'Inter', sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .glass-card {
+        background: var(--glass);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 40px;
+        width: 100%;
+        max-width: 900px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    h2 {
+        background: linear-gradient(to right, #818cf8, #c084fc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 2rem;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .section-title {
+        color: #94a3b8;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin: 25px 0 15px;
+        border-left: 4px solid var(--primary);
+        padding-left: 10px;
+    }
+
+    input, textarea {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        color: white;
+        padding: 14px;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+
+    input:focus {
+        border-color: var(--primary);
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .btn-action {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        border: none;
+        border-radius: 14px;
+        color: white;
+        padding: 18px;
+        font-weight: 700;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 30px;
+        transition: transform 0.2s;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.5);
+    }
+        </style>
