@@ -10,22 +10,16 @@
     <style>
         :root { --blue: #2563eb; --gold: #fbbf24; --dark: #0f172a; --card: #1e293b; --red: #ef4444; }
         body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; margin: 0; }
-        
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); display: flex; align-items: center; justify-content: center; z-index: 1000; }
         .login-box { background: var(--card); padding: 40px; border-radius: 12px; width: 350px; text-align: center; border: 1px solid var(--blue); }
-        
         .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; display: none; } 
         .card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; }
         h2 { color: var(--gold); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
-        
-        input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
-        #pFee { border: 1px solid var(--gold); color: var(--gold); font-weight: bold; }
-        .btn { background: var(--blue); color: white; padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; }
-        
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
+        .btn { background: var(--blue); color: white; padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #334155; font-size: 13px; }
         th { color: var(--gold); }
-        .search-box { margin-bottom: 15px; border: 2px solid var(--blue); }
     </style>
 </head>
 <body>
@@ -47,20 +41,19 @@
                 <input type="text" id="pName" placeholder="Magaca Bukaanka">
                 <input type="text" id="pNum" placeholder="Lambar Tikidh">
                 <input type="tel" id="pPhone" placeholder="Mobile-ka Bukaanka">
-                <textarea id="pComplaint" placeholder="Cabashada Bukaanka (Xanuunka)" rows="3"></textarea>
+                <textarea id="pComplaint" placeholder="Cabashada Bukaanka" rows="3"></textarea>
                 <input type="text" id="dName" placeholder="Magaca Dhakhtarka">
                 <input type="number" id="pRoom" placeholder="Qolka Dhakhtarka">
-                <label style="color:var(--gold); font-size: 12px;">Lacagta ($):</label>
                 <input type="number" id="pFee" value="10">
-                <button class="btn" onclick="sendToTV()">U DIR TV-GA & KEYDI</button>
+                <button class="btn" onclick="saveToQueue()" style="background: var(--gold); color: black;">DIIWAANGELI BUKAANKA</button>
             </div>
 
             <div class="card">
-                <h3>Bukaanadii Hore (<span id="qCount">0</span>)</h3>
-                <input type="text" id="search" class="search-box" onkeyup="searchTable()" placeholder="Raadi magaca bukaanka...">
+                <h3>Bukaanadii Subaxdii (<span id="qCount">0</span>)</h3>
+                <input type="text" id="search" onkeyup="searchTable()" placeholder="Raadi bukaanka...">
                 <div style="max-height: 450px; overflow-y: auto;">
                     <table>
-                        <thead><tr><th>Tikidh</th><th>Bukaanka</th><th>Cabashada</th><th>Dhakhtarka</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Tikidh</th><th>Bukaanka</th><th>Dhakhtarka</th><th>Action</th></tr></thead>
                         <tbody id="historyBody"></tbody>
                     </table>
                 </div>
@@ -99,7 +92,8 @@
             }
         });
 
-function sendToTV() {
+        // Shaqada Diiwaangelinta (Save only)
+        function saveToQueue() {
             const name = document.getElementById('pName').value, 
                   num = document.getElementById('pNum').value, 
                   phone = document.getElementById('pPhone').value, 
@@ -108,30 +102,31 @@ function sendToTV() {
                   doc = document.getElementById('dName').value, 
                   fee = parseFloat(document.getElementById('pFee').value);
 
-            if(name && num && complaint && room) { // Waxaan ku daray room
-                const dateKey = new Date().toLocaleDateString().replace(/\//g, '-');
-
-                // 1. U dir TV-ga (live_queue) - .set() waa kan TV-ga u sheegaya inuu qofkan cusub soo bandhigo
-                db.ref('live_queue').set({ name, num, room, doctor: doc, complaint, phone });
-                
-                // 2. Keydi History-ga
-                db.ref('patient_history').push({ 
-                    name, num, phone, complaint, room, doctor: doc, fee,
-                    date: new Date().toLocaleDateString(), 
-                    time: new Date().toLocaleTimeString() 
+            if(name && num && complaint && room) {
+                db.ref('patient_history').push({ name, num, phone, complaint, room, doctor: doc, fee,
+                    date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString() 
                 });
-                
-                // 3. Dakhliga Maanta
-                db.ref('daily_revenue/' + dateKey).push({ name, amount: fee, time: new Date().toLocaleTimeString() });
-
                 successSound.play();
-                
-                alert("Waa la diray bukaankii! TV-ga hadda waa laga arkayaa.");
-                document.getElementById('pName').value = ""; 
-                document.getElementById('pComplaint').value = "";
+                alert("Bukaankii waa la keydiyay!");
+                document.getElementById('pName').value = "";
                 document.getElementById('pNum').value = "";
-            } else { alert("Fadlan buuxi meelaha muhiimka ah (Magaca, Tikidhka, Qolka iyo Cabashada)!"); }
-            }
+            } else { alert("Fadlan buuxi meelaha muhiimka ah!"); }
+        }
+
+        // Shaqada U Dirista TV-ga
+        function callToTV(key) {
+            db.ref('patient_history/' + key).once('value').then(snapshot => {
+                const p = snapshot.val();
+                db.ref('live_queue').set({ name: p.name, num: p.num, room: p.room, doctor: p.doctor, complaint: p.complaint });
+                
+                // Dakhliga maanta (Halkan ayaan ku daray markii la waco)
+                const dateKey = new Date().toLocaleDateString().replace(/\//g, '-');
+                db.ref('daily_revenue/' + dateKey).push({ name: p.name, amount: p.fee, time: new Date().toLocaleTimeString() });
+                
+                alert("Bukaanka " + p.name + " ayaa loo diray TV-ga!");
+            });
+        }
+
         function loadHistory() {
             db.ref('patient_history').on('value', (snap) => {
                 const tbody = document.getElementById('historyBody');
@@ -139,7 +134,13 @@ function sendToTV() {
                 tbody.innerHTML = "";
                 snap.forEach((child) => {
                     const item = child.val();
-                    tbody.insertAdjacentHTML('afterbegin', `<tr><td>${item.num}</td><td>${item.name}</td><td>${item.complaint}</td><td>${item.doctor}</td><td><button onclick="db.ref('patient_history').child('${child.key}').remove()" style="background:var(--red); color:white; border:none; padding:4px; cursor:pointer;">Tirtir</button></td></tr>`);
+                    tbody.insertAdjacentHTML('afterbegin', `<tr>
+                        <td>${item.num}</td><td>${item.name}</td><td>${item.doctor}</td>
+                        <td>
+                            <button onclick="callToTV('${child.key}')" style="background:var(--blue); color:white; border:none; padding:4px; cursor:pointer;">TV</button>
+                            <button onclick="db.ref('patient_history').child('${child.key}').remove()" style="background:var(--red); color:white; border:none; padding:4px; cursor:pointer;">Xir</button>
+                        </td>
+                    </tr>`);
                 });
             });
         }
@@ -156,87 +157,3 @@ function sendToTV() {
     </script>
 </body>
 </html>
-<style>
-    :root {
-        --primary: #6366f1;
-        --secondary: #a855f7;
-        --bg: #0f172a;
-        --glass: rgba(255, 255, 255, 0.05);
-        --border: rgba(255, 255, 255, 0.1);
-    }
-
-    body {
-        background: radial-gradient(circle at top left, #1e1b4b, #0f172a);
-        color: #f8fafc;
-        font-family: 'Inter', sans-serif;
-        margin: 0;
-        min-height: 100vh;
-        display: flex;
-        justify-content: center;
-        padding: 20px;
-    }
-
-    .glass-card {
-        background: var(--glass);
-        backdrop-filter: blur(12px);
-        border: 1px solid var(--border);
-        border-radius: 24px;
-        padding: 40px;
-        width: 100%;
-        max-width: 900px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    }
-
-    h2 {
-        background: linear-gradient(to right, #818cf8, #c084fc);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-size: 2rem;
-        text-align: center;
-        margin-bottom: 30px;
-    }
-
-    .section-title {
-        color: #94a3b8;
-        font-size: 0.875rem;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin: 25px 0 15px;
-        border-left: 4px solid var(--primary);
-        padding-left: 10px;
-    }
-
-    input, textarea {
-        background: rgba(0, 0, 0, 0.2);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        color: white;
-        padding: 14px;
-        width: 100%;
-        transition: all 0.3s ease;
-    }
-
-    input:focus {
-        border-color: var(--primary);
-        outline: none;
-        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-    }
-
-    .btn-action {
-        background: linear-gradient(135deg, var(--primary), var(--secondary));
-        border: none;
-        border-radius: 14px;
-        color: white;
-        padding: 18px;
-        font-weight: 700;
-        cursor: pointer;
-        width: 100%;
-        margin-top: 30px;
-        transition: transform 0.2s;
-    }
-
-    .btn-action:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.5);
-    }
-        </style>
